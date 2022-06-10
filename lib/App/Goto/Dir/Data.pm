@@ -10,8 +10,8 @@ package App::Goto::Dir::Data;
 
 #### de- constructors ##################################################
 sub new {
-    my ($pkg, $config) = @_;
-    return unless ref $config eq 'HASH';
+    my ($pkg, $data) = @_;
+    return unless ref $data eq 'HASH';
     my $file = $config->{'file'}{'data'};
     my $sls = $config->{'syntax'}{'sigil'}{'special_list'};
     my %sl_name = map { $_ => $sls.$config->{'list'}{'special_name'}{$_} } keys %{$config->{'list'}{'special_name'}};

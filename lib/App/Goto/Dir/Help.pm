@@ -232,10 +232,13 @@ sub settings{ <<EOT,
     name_default: use                   name of default list
     special_name:                     setting personal names to special lists
       all:                              contains every entry (deleted too)
-      bin:                              contains only deleted, not yet scrapped
-      idle:                             dormant projects
-      new:                              only newly created entries
+      new:                              newly created entries
+      used:                             dirs visited in set time
+      idle:                             dirs not visited in set time
       named:                            entries with a shortcut name
+      run:                              entries with a start script
+      defunct:                          entries with not existing dirs
+      bin:                              contains only deleted, not yet scrapped
     special_description:              description texts of special lists
     sorted_by: (current|default)      sorting criterion of list on app start
     sort_default: position            default sorting criterion
@@ -275,7 +278,7 @@ sub version {
 
   Command line tool gt for long distance directory jumps
 
-  Herbert Breunung 2021
+  Herbert Breunung 2022
 
   For more help use gt --help help or gt -$config->{syntax}{command_shortcut}{help} $config->{syntax}{command_shortcut}{help}
 EOT
@@ -866,10 +869,10 @@ sub help {
 
   --help            -$sc         overview
 
-  --help=basics     -$sc$opt->{basics}        how to change directory, special lists and entries
-  --help=commands   -$sc$opt->{commands}        list of all commands (cheat sheet)
-  --help=install    -$sc$opt->{install}        how to install and maintain the program
-  --help=settings   -$sc$opt->{settings}        how to configure the program
+  --help basics     -$sc$opt->{basics}        how to change directory, special lists and entries
+  --help commands   -$sc$opt->{commands}        list of all commands (cheat sheet)
+  --help install    -$sc$opt->{install}        how to install and maintain the program
+  --help settings   -$sc$opt->{settings}        how to configure the program
 
   --help <command>  -$sc<cmd>    detailed explanation of one <command> (e.g. --add)
                                command shortcut (<cmd>) may be used instead (e.g. -$config->{'syntax'}{'command_shortcut'}{'add'})

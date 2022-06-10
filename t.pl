@@ -85,6 +85,15 @@ my $data = $app->{'data'};
 my $all = $data->get_special_lists('all');
 my $pos = $all->pos_from_name('');
 
+my $args = App::Goto::Dir::Parse::args("");
+say int @$args;
+for my $arg (@$args){
+    print " - ";
+    if (ref $arg){ print "$_" for @$arg }
+    else         { print $arg }
+    say '';
+}
+
 say '   run goto test in ', sprintf("%.4f",timediff( Benchmark->new, $t)->[1]), ' sec';
 
 
