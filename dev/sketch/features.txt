@@ -1,0 +1,43 @@
+
+Dir
+
+
+
+Entry:
+   + dir [voll/gekürzt]
+
+
+   + time [stamp/formatiert]
+     - erstellt
+     - geändert
+     - benutzt
+     - gelöscht
+
+   visits
+   recents
+
+  ~>name
+  ~>code
+  ~>note
+
+
+Liste:
+   pos: entry
+
+   move, delete, insert
+
+Data:
+   name : lists
+   special: bin, new, all
+
+
+Config:
+   current:listname
+   start-with: current/listname
+   recents: time
+   hold: time
+   ? show-note-after-goto
+   format:
+       nr
+       name
+       dir
