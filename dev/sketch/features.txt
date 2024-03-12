@@ -28,7 +28,7 @@ Liste:
 
 Data:
    name : lists
-   special: bin, new, all
+   special: bin, new, all, named
 
 
 Config:

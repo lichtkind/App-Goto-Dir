@@ -1,83 +1,40 @@
 #!/usr/bin/perl -w
 use v5.20;
 use warnings;
-use Test::More tests => 51;
+use Test::More tests => 17;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
-use App::Goto::Dir::Data::Entry;
-my $class = 'App::Goto::Dir::Data::Entry';
 
-my $empty = App::Goto::Dir::Data::Entry->new();
-is(ref $empty, '',                 'need at least a directory');
+my $class = 'App::Goto::Dir::Data::ValueType::TimeStamp';
 
-my $nameless = App::Goto::Dir::Data::Entry->new('dir');
-is(ref $nameless, $class,           'created first simple entry');
-is($nameless->dir, 'dir',           'directory getter works');
-is($nameless->name, '',             'has no name');
-is($nameless->script, '',           'and no script');
-ok($nameless->create_time,          'has created time stamp');
-is($nameless->visit_time, 0,        'was not visited yet');
-is($nameless->visit_count, 0,       'so no visits counted');
-is($nameless->delete_time, 0,       'was not deleted');
+use_ok( $class );
 
+my $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new();
+is( ref $obj, $class, 'Created first onject');
+is( $obj->get,     0, 'default value is zero');
 
-my $clone = $nameless->clone();
-is(ref $clone, $class,              'could clone the entry');
-ok($nameless ne $clone,             'clone has different ref');
-is($clone->dir, 'dir',              'clone has right directory');
-$clone->redirect('cdir');
-is($nameless->dir, 'dir',           'original is unaffected');
-is($clone->dir, 'cdir',             'clone entry has new directory');
+$obj->set(1);
+my $t = time;
+is( abs(time - $t) < 5,  1, 'updated just now');
+$obj->set(0);
+is( $obj->get,           0, 'could reset value');
+is( $obj->is_empty,      1, 'empty predicate works');
 
-is($clone->name, '',                'clone got no name from original');
-$clone->rename('clone');
-is($nameless->name, '',             'original didn\'t change name');
-is($clone->name, 'clone',           'changed clones name');
+$obj->set(1);
+$t = time;
+is( $obj->is_empty,                  0, 'got valid time stamp again');
+is( $obj->is_older_then_age(0),      0, 'time stamp is newer than beginning of period');
+is( $obj->is_older_then_period(10),  0, 'time stamp is newer than 10 seconds');
 
-is($clone->script, '',              'clone got no script from original');
-$clone->edit('script');
-is($nameless->script, '',           'original didn\'t change script');
-is($clone->script, 'script',        'changed clones script');
-
-is($clone->create_time, $nameless->create_time,  'clone got same create time as original');
-is($clone->visit_time,  $nameless->visit_time,   'clone got same visit time as original');
-is($clone->visit_count, $nameless->visit_count,  'clone got same visit count as original');
-is($clone->delete_time, $nameless->delete_time,  'clone got same delete time as original');
-
-is($clone->visit, 'cdir',           'visited ones clone directory');
-is($clone->visit_count, 1,          'one visit so far');
-ok($clone->create_time,             'clone has now have visit time stamp');
-is($nameless->visit_time, 0,        'original still was not visited');
-is($nameless->visit_count, 0,       'so no visits counted');
-
-ok($clone->delete,                  'could delete clone');
-ok($clone->delete_time,             'clone has now have delete time stamp');
-ok($clone->is_deleted,              'clone is deleted');
-is($nameless->delete_time, 0,       'original unaffected');
-ok(!$nameless->is_deleted,          'original is not deleted');
-ok($nameless->delete,               'deleted original');
-is($clone->undelete, 0,             'reversed deletion of clone');
-ok(!$clone->is_deleted,             'clone is no longer deleted');
-ok($nameless->is_deleted,           'original is still deleted (unaffected from undelete)');
-
-is(int($nameless->member_of_lists), 0,    'entry is part of no list');
-is(int($clone->member_of_lists), 0,       'clone also');
-$clone->add_to_list('a',1);
-is(int($nameless->member_of_lists), 0,    'entry is still part of no list');
-is(int($clone->member_of_lists), 1,       'clone is in one list');
-is($clone->get_list_pos('a'), 1,          'clone has a list pos');
-is($clone->remove_from_list('a'), 1,      'clone was removed from list');
-is($clone->get_list_pos('a'), undef,      'clone has no longer this list pos');
-is(int($clone->member_of_lists), 0,       'clone is in no lists');
-
-
-my $named = App::Goto::Dir::Data::Entry->new($ENV{'HOME'}.'/dir', 'name');
-is(ref $named, $class,              'created named entry');
-is($named->dir, '~/dir',            'got back compact directory');
-is($named->full_dir, $ENV{'HOME'}.'/dir', 'got back expanded directory');
-is($named->name, 'name',            'got back name');
-is($named->clone->name, 'name',     'got back name from clone');
-
-#say App::Goto::Dir::Data::Entry::reformat_time_stamp($named->create_time, 'd.m.y  t');
+my $value = $obj->get;
+is( $value > 1,                      1, 'getter brings a positive value');
+$obj->set(0);
+is( $obj->is_older_then_age(10),     1, 'time stamp is older than after beginning of period');
+is( $obj->is_older_then_period(10),  1, 'time stamp is older than 10 seconds');
+is( $obj->format(0,0),    '01.01.1970', 'correct time string, date only, human readable order');
+is( $obj->format(),       '01.01.1970', 'format arg defaults are correct');
+is( $obj->format(0,1),    '1970.01.01', 'correct time string, date only, sortable order');
+is( $obj->format(1),      '01.01.1970  01:00:00', 'correct time string, with time, human readable order');
+is( $obj->format(1,1),    '1970.01.01  01:00:00', 'correct time string, with time, sortable order');
 
 exit 0;
