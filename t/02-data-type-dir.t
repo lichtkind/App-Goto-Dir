@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 10;
+use Test::More tests => 13;
 use File::Spec;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
@@ -23,5 +23,11 @@ is( ref App::Goto::Dir::Data::ValueType::Directory->new('/path/to/nowhere'), '',
 
 $obj->set( $dir );
 is( $obj->format(1), $adir, 'folded dir back correctly and expanded t absolute');
+
+my $state = $obj->state;
+is( $obj->get,      $state, 'could retrieve inner state');
+my $nobj = App::Goto::Dir::Data::ValueType::Directory->restate( $state );
+is( ref $nobj, $class, 'recreated object via restate');
+is( $obj->get,   $obj->get, 'restated object has correct value');
 
 exit 0;

@@ -2,6 +2,7 @@ use v5.18;
 use warnings;
 
 use App::Goto::Dir::Data::ValueType::Directory;
+use App::Goto::Dir::Data::ValueType::Position;
 use App::Goto::Dir::Data::ValueType::TimeStamp;
 
 package App::Goto::Dir::Data::Entry;
@@ -24,18 +25,35 @@ sub new {
 sub clone   { $_[0]->restate( $_[0]->state ) }
 sub restate { bless $_[1] if ref $_[1] eq 'HASH' }
 sub state   {
-    my $state = { map {$_ => $_[0]->{$_} } keys %{$_[0]} };
-    $state->{'pos'} = { map { $_ => $_[0]->{'pos'}{$_} } keys %{$_[0]->{'pos'}} };
+    my $state = {};
+    $state->{ $_ } = $_[0]->{ $_ }->state for qw/dir created deleted visited listpos/;
+    $state->{ $_ } = $_[0]->{ $_ }        for qw/script note visits/;
     $state;
 }
 
 #### time stamps #######################################################
+
+sub age           { $_[0]->{'created'}->age_in_days }
+
+sub last_visit    { $_[0]->{'visited'}->is_empty ? -1 : $_[0]->{'visited'}->age_in_days } # -1 == never
+sub visits        { $_[0]->{'visits'} }
+sub gets_visit  {
+    my ($self) = @_;
+    $self->{'visited'}->update;
+    $self->{'visits'}++;
+}
+
+sub is_expired    { defined $_[1] and ! $_[0]->{'deleted'}->is_empty and $_[0]->{'deleted'}->age_in_days > $_[1] }
+sub delete        { $_[0]->{'deleted'}->update if $_[0]->{'deleted'}->is_empty }
+sub undelete      { $_[0]->{'deleted'}->clear                                  }
+
 #### read accessors ############################################################
 
-sub dir           { $_[0]->{'dir'}->get }
-sub full_dir      { _expand_home_dir( $_[0]->{'dir'} ) }
+sub dir           { $_[0]->{'dir'}->format( $_[1] ) }
 sub name          { $_[0]->{'name'} }
 sub script        { $_[0]->{'script'} }
+sub note          { $_[0]->{'note'} }
+
 sub create_time   { $_[0]->{'create_time'} }
 sub visit_time    { $_[0]->{'visit_time'} }
 sub visit_count   { $_[0]->{'visits'} }
@@ -68,14 +86,6 @@ sub redirect {
     $self->{'dir'} = _compact_home_dir( $dir );
     $self->{'full_dir'} = _expand_home_dir( $dir );
 }
-sub visit {
-    my ($self) = @_;
-    $self->{'visit_time'} = _create_time_stamp();
-    $self->{'visits'}++;
-    $self->{'full_dir'};
-}
-sub delete   { $_[0]->{'delete_time'} = _create_time_stamp() unless $_[0]->is_deleted }
-sub undelete { $_[0]->{'delete_time'} = 0                                             }
 
 #### list API ##########################################################
 

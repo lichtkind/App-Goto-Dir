@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 21;
+use Test::More tests => 25;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 my $class = 'App::Goto::Dir::Data::ValueType::TimeStamp';
@@ -9,7 +9,7 @@ my $class = 'App::Goto::Dir::Data::ValueType::TimeStamp';
 use_ok( $class );
 
 my $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new();
-is( ref $obj, $class, 'Created first object');
+is( ref $obj, $class, 'created first object');
 is( $obj->get,     0, 'default value is zero');
 
 $obj->set(1);
@@ -42,5 +42,12 @@ $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(1);
 is( $obj->is_empty,      0, 'created none empty time stamp');
 $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(0);
 is( $obj->is_empty,      1, 'created explicitly empty time stamp');
+$obj->update;
+is( $obj->is_empty,      0, 'time stamp was created via update');
+my $state = $obj->state;
+is( $obj->get,      $state, 'could retrieve inner state');
+my $nobj = App::Goto::Dir::Data::ValueType::TimeStamp->restate($state);
+is( ref $nobj, $class, 'recreated object via restate');
+is( $obj->get,   $obj->get, 'restated object has correct value');
 
 exit 0;
