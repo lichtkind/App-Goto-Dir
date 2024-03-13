@@ -53,39 +53,24 @@ sub dir           { $_[0]->{'dir'}->format( $_[1] ) }
 sub name          { $_[0]->{'name'} }
 sub script        { $_[0]->{'script'} }
 sub note          { $_[0]->{'note'} }
-
-sub create_time   { $_[0]->{'create_time'} }
-sub visit_time    { $_[0]->{'visit_time'} }
-sub visit_count   { $_[0]->{'visits'} }
-sub delete_time   { $_[0]->{'delete_time'} }
-sub is_deleted    { $_[0]->{'delete_time'} ne 0 }
-sub created_before {
-    my ($self, $delta_ms) = @_;
-    return unless defined $delta_ms;
-    (_standardise_stamp($_[0]->{'create_time'}) cmp _std_format_delta( $_[1] )) > 0;
-}
-sub visited_before {
-    my ($self, $delta_ms) = @_;
-    return unless defined $delta_ms;
-    return 0 unless $_[0]->{'visit_time'};
-    (_standardise_stamp($_[0]->{'visit_time'}) cmp _std_format_delta( $_[1] )) > 0;
-}
-sub deleted_before {
-    my ($self, $delta_ms) = @_;
-    return unless defined $delta_ms;
-    return 0 unless $_[0]->{'delete_time'};
-    (_standardise_stamp($_[0]->{'delete_time'}) cmp _std_format_delta( $_[1] )) > 0;
+sub get {
+    my ($self, $property) = @_;
+    return unless defined $property;
+    return $self->age        if $property eq 'age';
+    return $self->dir        if $property eq 'dir';
+    return $self->name       if $property eq 'name';
+    return $self->script     if $property eq 'script';
+    return $self->note       if $property eq 'note';
+    return $self->visits     if $property eq 'visits';
+    return $self->last_visit if $property eq 'last_visit';
 }
 
 #### write accessors ###########################################################
 
-sub rename   { $_[0]->{'name'} = $_[1] }
-sub edit     { $_[0]->{'script'} = $_[1] }
-sub redirect {
-    my ($self, $dir) = @_;
-    $self->{'dir'} = _compact_home_dir( $dir );
-    $self->{'full_dir'} = _expand_home_dir( $dir );
-}
+sub rename   { $_[0]->{'name'}   = $_[1]   }
+sub edit     { $_[0]->{'script'} = $_[1]   }
+sub notate   { $_[0]->{'note'}   = $_[1]   }
+sub redirect { $_[0]->{'dir'}->set( _[1] ) }
 
 #### list API ##########################################################
 

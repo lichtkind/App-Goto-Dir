@@ -11,11 +11,11 @@ sub new     {
 }
 
 sub restate {
-    my $state = shift;
+    my ($pkg, $state) = @_;
     return unless ref $state eq 'HASH';
     bless { %$state };
 }
-sub state   { { %{$_[0]} } }
+sub state   { return { %{$_[0]} } }
 sub clone   { $_[0]->restate( $_[0]->state ) }
 
 #### getter/setter #####################################################
@@ -26,7 +26,7 @@ sub get_position {
 }
 sub set_position {
     my ($self, $list_name, $pos) = @_;
-    return unless $self->is_member_of( $list_name ) and defined $pos;
+    return unless $self->is_member_of( $list_name ) and defined $pos and $pos;
     $self->{$list_name} = int $pos;
 }
 
@@ -41,11 +41,9 @@ sub remove_list {
     delete $self->{$list_name};
 }
 
-
-
 #### predicates ########################################################
 
-sub is_member_of { defined $_[1] and exists $_[0]->{ $_[1] } }
+sub is_member_of { (defined $_[1] and exists $_[0]->{ $_[1] }) ? 1 : 0 }
 
 sub list_names {
     my $self = shift;
