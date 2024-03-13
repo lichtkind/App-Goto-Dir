@@ -2,6 +2,7 @@ use v5.18;
 use warnings;
 
 use App::Goto::Dir::Data::Entry;
+
 our $elem_class = 'App::Goto::Dir::Data::Entry';
 
 package App::Goto::Dir::Data::List; # index: 1 .. count

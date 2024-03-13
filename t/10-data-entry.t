@@ -1,11 +1,12 @@
 #!/usr/bin/perl -w
-use v5.20;
+use v5.18;
 use warnings;
 use Test::More tests => 13;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
-use App::Goto::Dir::Data::Entry;
 my $class = 'App::Goto::Dir::Data::Entry';
+
+use_ok( $class );
 
 my $nameless = App::Goto::Dir::Data::Entry->new('dir');
 is(ref $nameless, $class,           'created first simple entry');

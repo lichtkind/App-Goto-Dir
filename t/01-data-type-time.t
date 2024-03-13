@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 17;
+use Test::More tests => 21;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 my $class = 'App::Goto::Dir::Data::ValueType::TimeStamp';
@@ -24,16 +24,23 @@ $t = time;
 is( $obj->is_empty,                  0, 'got valid time stamp again');
 is( $obj->is_older_then_age(0),      0, 'time stamp is newer than beginning of period');
 is( $obj->is_older_then_period(10),  0, 'time stamp is newer than 10 seconds');
+is( $obj->age_in_days() < 1,         1, 'time stamp is newer one day');
 
 my $value = $obj->get;
 is( $value > 1,                      1, 'getter brings a positive value');
 $obj->set(0);
 is( $obj->is_older_then_age(10),     1, 'time stamp is older than after beginning of period');
 is( $obj->is_older_then_period(10),  1, 'time stamp is older than 10 seconds');
+is( $obj->age_in_days() > 18250,     1, 'time stamp is older than 50 years');
 is( $obj->format(0,0),    '01.01.1970', 'correct time string, date only, human readable order');
 is( $obj->format(),       '01.01.1970', 'format arg defaults are correct');
 is( $obj->format(0,1),    '1970.01.01', 'correct time string, date only, sortable order');
 is( $obj->format(1),      '01.01.1970  01:00:00', 'correct time string, with time, human readable order');
 is( $obj->format(1,1),    '1970.01.01  01:00:00', 'correct time string, with time, sortable order');
+
+$obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(1);
+is( $obj->is_empty,      0, 'created none empty time stamp');
+$obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(0);
+is( $obj->is_empty,      1, 'created explicitly empty time stamp');
 
 exit 0;

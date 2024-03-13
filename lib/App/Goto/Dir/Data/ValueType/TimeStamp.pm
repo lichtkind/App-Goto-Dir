@@ -5,7 +5,7 @@ package App::Goto::Dir::Data::ValueType::TimeStamp;
 
 #### de- constructors ##################################################
 
-sub new     { restate(shift, 0) }
+sub new     { bless {value => ((defined $_[1] and $_[1]) ? _now() : int(0) ) } }
 sub restate { bless {value => $_[1] + 0} }
 sub clone   { $_[0]->restate( $_[0]->state ) }
 sub state   { $_[0]->value }
@@ -24,6 +24,7 @@ sub clear   { $_[0]->{'value'} = 0 }
 sub is_empty           { int ! $_[0]->value  }
 sub is_older_then_age   { ($_[0]->value < $_[1]) ? 1 : 0 }
 sub is_older_then_period { ($_[0]->value + $_[1] < _now() ) ? 1 : 0 }
+sub age_in_days           { (_now() - $_[0]->value) / 86400 }
 
 #### display ###########################################################
 

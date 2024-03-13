@@ -6,20 +6,22 @@ use App::Goto::Dir::Data::ValueType::TimeStamp;
 
 package App::Goto::Dir::Data::Entry;
 
-#### constructors + serialisation ##############################################
+#### constructors + serialisation ######################################
 
 sub new {
     my ($pkg, $dir_str, $name_str) = @_;
     my $dir = App::Goto::Dir::Data::ValueType::Directory->new( $dir_str );
     return unless ref $dir;  # only existing directories allowed
 
-
-    bless { name => $name // '', script => '', pos => {},
-            dir => $dir,
-            create_time => _create_time_stamp(),
-            visit_time   => 0, visits => 0,    delete_time => 0,  }
+    bless { dir => $dir, name => $name_str // '', list_pos => {},
+            script => '',  note => '',
+            created => App::Goto::Dir::Data::ValueType::TimeStamp->new( 1 ),
+            deleted => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
+            visited => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
+            visits  => 0,
+    }
 }
-sub clone   { restate( '', $_[0]->state) }
+sub clone   { $_[0]->restate( $_[0]->state ) }
 sub restate { bless $_[1] if ref $_[1] eq 'HASH' }
 sub state   {
     my $state = { map {$_ => $_[0]->{$_} } keys %{$_[0]} };
@@ -27,9 +29,10 @@ sub state   {
     $state;
 }
 
+#### time stamps #######################################################
 #### read accessors ############################################################
 
-sub dir           { $_[0]->{'dir'} }
+sub dir           { $_[0]->{'dir'}->get }
 sub full_dir      { _expand_home_dir( $_[0]->{'dir'} ) }
 sub name          { $_[0]->{'name'} }
 sub script        { $_[0]->{'script'} }
