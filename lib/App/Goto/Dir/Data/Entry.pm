@@ -1,8 +1,8 @@
 use v5.18;
 use warnings;
+
 use App::Goto::Dir::Data::ValueType::Directory;
 use App::Goto::Dir::Data::ValueType::TimeStamp;
-
 
 package App::Goto::Dir::Data::Entry;
 
@@ -11,11 +11,11 @@ package App::Goto::Dir::Data::Entry;
 sub new {
     my ($pkg, $dir_str, $name_str) = @_;
     my $dir = App::Goto::Dir::Data::ValueType::Directory->new( $dir_str );
-    return unless ref $dir; # return "directory $dir does not exist" unless -d $dir;
-    my $now = _now();
+    return unless ref $dir;  # only existing directories allowed
+
 
     bless { name => $name // '', script => '', pos => {},
-            dir => _compact_home_dir($dir),
+            dir => $dir,
             create_time => _create_time_stamp(),
             visit_time   => 0, visits => 0,    delete_time => 0,  }
 }
@@ -81,33 +81,6 @@ sub get_list_pos     { $_[0]->{'pos'}{ $_[1] } if defined $_[1] }
 sub add_to_list      { $_[0]->{'pos'}{ $_[1] } = $_[2] }
 sub remove_from_list { delete $_[0]->{'pos'}{ $_[1] } }
 #sub remove_from_special_lists { for (keys %{$_[0]->{'pos'}}) {delete $_[0]->{'pos'}{ $_ } if substr($_,0,1) =~ /\W/} }
-
-#### utils #############################################################
-
-sub _compact_home_dir { (index($_[0], $ENV{'HOME'}) == 0) ? '~/' . substr( $_[0], length($ENV{'HOME'}) + 1 ) : $_[0] }
-sub _expand_home_dir  { (substr($_[0], 0, 1) eq '~') ? File::Spec->catfile( $ENV{'HOME'}, substr($_[0], 2) ) : $_[0] }
-sub _create_time_stamp { # human readable time stamp
-    my $time = shift // _now();
-    my @t = localtime $time;
-    sprintf "%4s.%02d.%02d.  %02d:%02d:%02d", 1900+$t[5], $t[4]+1, $t[3], $t[2], $t[1], $t[0];
-}
-sub _time_stamp_from_delta { _create_time_stamp( _now() + $_[0] ) if defined $_[0]  }
-sub _now { time }
-
-sub reformat_time_stamp { # understand keys y = year, m = month, d = day, t = time
-    my ($stamp, $format) = @_;
-    return unless defined $format;
-    my $matched = $stamp =~ /(\d\d\d\d)\.(\d\d)\.(\d\d)\.\s+(\d\d:\d\d:\d\d)/;
-    return unless $matched;
-    my %stamp_content = (y => $1, m => $2, d => $3, t => $4);
-    my $res = '';
-    for my $i (1 .. length($format)) {
-        my $char = substr($format, $i-1, 1);
-        if (exists $stamp_content{ $char }){ $res .=  $stamp_content{ $char } }
-        else                               { $res .= $char }
-    }
-    $res;
-}
 
 #### end ###############################################################
 

@@ -1,28 +1,27 @@
 #!/usr/bin/perl -w
-use v5.20;
+use v5.18;
 use warnings;
-use Test::More tests => 13;
+use Test::More tests => 10;
+use File::Spec;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
-use App::Goto::Dir::Data::Entry;
-my $class = 'App::Goto::Dir::Data::Entry';
+my $class = 'App::Goto::Dir::Data::ValueType::Directory';
+my ($dive, $dir) = File::Spec->splitpath( __FILE__ );
+my $adir = File::Spec->rel2abs( $dir );
 
-my $nameless = App::Goto::Dir::Data::Entry->new('dir');
-is(ref $nameless, $class,           'created first simple entry');
-is($nameless->dir, 'dir',           'got back directory');
-is($nameless->name, '',             'got back name');
+use_ok( $class );
+my $obj = App::Goto::Dir::Data::ValueType::Directory->new( $ENV{'HOME'} );
+is( ref $obj, $class, 'Created first object');
+is( $obj->get, '~', 'dir was just the home dir, which got folded');
+is( $obj->format(0), '~', 'display with folded home dir');
+is( $obj->format(1), $ENV{'HOME'}, 'display with not folded home dir');
+is( $obj->format(0), '~', 'display default is foleded');
+$obj->set('/path/to/nowhere');
+is( $obj->get, '~', 'bad dir was not accepted');
+is( ref App::Goto::Dir::Data::ValueType::Directory->new(), '', 'need a value to create object');
+is( ref App::Goto::Dir::Data::ValueType::Directory->new('/path/to/nowhere'), '', 'need an existing dir');
 
-my $clone = $nameless->clone();
-is(ref $clone, $class,              'clone has right class');
-ok($nameless ne $clone,             'clone has different ref');
-is($clone->dir, 'dir',              'clone has right directory');
-$clone->rename('clone');
-is($nameless->name, '',             'original didn\'t change name');
-is($clone->name, 'clone',           'changed clones name');
+$obj->set( $dir );
+is( $obj->format(1), $adir, 'folded dir back correctly and expanded t absolute');
 
-my $named = App::Goto::Dir::Data::Entry->new($ENV{'HOME'}.'/dir', 'name');
-is(ref $named, $class,              'created named entry');
-is($named->dir, '~/dir',            'got back compact directory');
-is($named->full_dir, $ENV{'HOME'}.'/dir', 'got back expanded directory');
-is($named->name, 'name',            'got back name');
-is($named->clone->name, 'name',     'got back name from clone');
+exit 0;

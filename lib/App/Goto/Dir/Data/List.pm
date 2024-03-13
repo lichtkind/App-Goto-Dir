@@ -1,6 +1,6 @@
 use v5.18;
 use warnings;
-use File::Spec;
+
 use App::Goto::Dir::Data::Entry;
 our $elem_class = 'App::Goto::Dir::Data::Entry';
 

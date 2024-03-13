@@ -1,16 +1,15 @@
 #!/usr/bin/perl -w
-use v5.20;
+use v5.18;
 use warnings;
 use Test::More tests => 17;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
-
 my $class = 'App::Goto::Dir::Data::ValueType::TimeStamp';
 
 use_ok( $class );
 
 my $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new();
-is( ref $obj, $class, 'Created first onject');
+is( ref $obj, $class, 'Created first object');
 is( $obj->get,     0, 'default value is zero');
 
 $obj->set(1);
