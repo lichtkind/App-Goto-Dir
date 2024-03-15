@@ -10,7 +10,7 @@ sub restate { bless {value => $_[1] + 0} }
 sub clone   { $_[0]->restate( $_[0]->state ) }
 sub state   { $_[0]->value }
 
-#### getter/setter #####################################################
+#### accessors #########################################################
 
 sub get     { $_[0]->value }
 sub set     { (defined $_[1] and $_[1]) ? $_[0]->update : $_[0]->clear }

@@ -2,33 +2,36 @@ use v5.18;
 use warnings;
 
 use App::Goto::Dir::Data::Entry;
-
-our $elem_class = 'App::Goto::Dir::Data::Entry';
+our $entry_class = 'App::Goto::Dir::Data::Entry';
 
 package App::Goto::Dir::Data::List; # index: 1 .. count
 
 #### constructor #######################################################
 sub new {
-    my ($pkg, $name, $description, $config, @elems) = @_;
-    return unless ref $config eq 'HASH';
-    my $self = bless { entry => \@elems, name => $name, description => $description,
-                       config => $config, pos_by_name => {}, pos_by_dir => {}, special => App::Goto::Dir::Parse::is_name($name)  };
-    refresh_reverse_hashes( $self );
-    $self;
+    my ($pkg, $name, $description, $special) = @_;
+    return unless defined $name;
+    bless { entry => [], name => $name, description => $description // '',
+            pos_by_name => {}, pos_by_dir => {}, special => $special };
 }
-sub refresh_reverse_hashes {
-    my ($self) = @_;
-    $self->{'pos_by_name'} = {};
-    $self->{'pos_by_dir'} = {};
-    for my $pos (1 .. @{$self->{'entry'}}){
-        my $el = $self->{'entry'}[$pos-1];
-        $el->add_to_list( $self->{'name'}, $pos );
-        $self->{'pos_by_dir'}{ $el->full_dir } = $pos;
-        $self->{'pos_by_name'}{ $el->name } = $pos if $el->name;
-    }
+sub clone   { $_[0]->restate( $_[0]->state ) }
+sub restate {
+    bless $_[1] if ref $_[1] eq 'HASH'
+}
+sub state   {
+    my ($self) = (shift);
+    return { name => $self->{'name'}, description => $self->{'description'}, special => 0}
+        unless $self->is_special;
 }
 
 #### accessors #########################################################
+sub get_name        { $_[0]->{'name'} }
+sub set_name        { $_[0]->{'name'} = $_[1] if defined $_[1] and $_[1] }
+sub get_description { $_[0]->{'description'} }
+sub set_description { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
+sub is_special      { $_[0]->{'special'} }
+
+sub all_entries     { @{$_[0]->{'entry'}} }
+sub length          { int @{$_[0]->{'entry'}} }
 sub get_entry {
     my ($self, $ID) = @_;
     return "can not get an list entry without ID!" unless defined $ID;
@@ -37,13 +40,6 @@ sub get_entry {
     return " ! '$ID' is not a valid dir path, name or position in list '".$self->get_name."'" if not $pos;
     wantarray ? ($self->{'entry'}[$pos-1], $pos) : $self->{'entry'}[$pos-1];
 }
-sub all_entries     { @{$_[0]->{'entry'}} }
-sub elems           { int @{$_[0]->{'entry'}} }
-sub get_name        { $_[0]->{'name'} }
-sub set_name        { $_[0]->{'name'} = $_[1] if defined $_[1] and $_[1] }
-sub get_description { $_[0]->{'description'} }
-sub set_description { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
-sub is_special      { $_[0]->{'special'} }
 
 #### elem API ##########################################################
 sub _insert_entry { splice @{$_[0]->{'entry'}}, $_[2]-1, 0, $_[1] }
@@ -92,7 +88,8 @@ sub move_entry {
     $entry;
 }
 
-#### utils #############################################################
+##### helper ###########################################################
+
 sub pos_from_ID {
     my ($self, $ID, $new) = @_;
     return 0 unless defined $ID;
@@ -112,15 +109,30 @@ sub pos_from_ID {
 
 sub pos_from_name { exists $_[0]->{'pos_by_name'}{ $_[1] } ? $_[0]->{'pos_by_name'}{ $_[1] } : 0 }
 sub pos_from_dir  { exists $_[0]->{'pos_by_dir'}{ $_[1] } ? $_[0]->{'pos_by_dir'}{ $_[1] } : 0 }
-sub is_pos     {
+
+sub _is_pos     {
     my ($self, $i) = @_;
-    my $c = $self->elems;
+    my $c = $self->length;
     $i == int $i and (($i > 0 and $i <= $c) or ($i < 0 and $i >= -$c))
 }
-sub is_new_pos {
+sub _is_new_pos {
     my ($self, $i) = @_;
-    my $c = $self->elems;
+    my $c = $self->length;
     $i == int $i and (($i > 0 and $i <= $c+1) or ($i < 0 and $i >= -$c-1))
 }
+
+sub _refresh_reverse_hashes {
+    my ($self) = @_;
+    $self->{'pos_by_name'} = {};
+    $self->{'pos_by_dir'} = {};
+    for my $pos (1 .. @{$self->{'entry'}}){
+        my $el = $self->{'entry'}[$pos-1];
+        $el->add_to_list( $self->{'name'}, $pos );
+        $self->{'pos_by_dir'}{ $el->full_dir } = $pos;
+        $self->{'pos_by_name'}{ $el->name } = $pos if $el->name;
+    }
+}
+
+#### end ###############################################################
 
 1;
