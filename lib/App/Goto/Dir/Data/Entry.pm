@@ -47,7 +47,7 @@ sub visit_dir  {
 # deleted date is more days ago than given number
 sub is_expired    { ( ! $_[0]->{'deleted'}->is_empty and defined $_[1]
                      and $_[0]->{'deleted'}->age_in_days > $_[1] )     ? 1 : 0 }
-sub delete        { $_[0]->{'deleted'}->update if $_[0]->{'deleted'}->is_empty }
+sub delete        { $_[0]->{'deleted'}->is_empty ? $_[0]->{'deleted'}->update : 0}
 sub undelete      { $_[0]->{'deleted'}->clear                                  }
 
 #### read accessors ####################################################

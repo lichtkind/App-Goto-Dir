@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 30;
+use Test::More tests => 33;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
@@ -42,6 +42,8 @@ is( $obj->redirect($adir),    $adir, 'could change directory of entry');
 is( $obj->dir,                $adir, 'entry has now a different directory');
 is( $obj->get('dir'),         $adir, 'entry dir retrieved via universal getter');
 is( $obj->delete() > 1,           1, 'could delete entry, since it was not deleted yet');
-
+is( $obj->delete(),               0, 'could delete entry only once');
+is( $obj->undelete() ,            0, 'reversed deletion of entry');
+is( $obj->delete() > 1,           1, 'could delete entry again');
 
 exit 0;

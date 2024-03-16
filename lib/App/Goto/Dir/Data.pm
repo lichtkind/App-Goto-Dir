@@ -8,9 +8,11 @@ use App::Goto::Dir::Data::List;
 
 package App::Goto::Dir::Data;
 
+my @special_list_name = qw/new bin all recent/;
+
 #### de- constructors ##################################################
 sub new {
-    my ($pkg, $data) = @_;
+    my ($pkg, $file_name) = @_;
     return unless ref $data eq 'HASH';
     my $file = $config->{'file'}{'data'};
     my $sls = $config->{'syntax'}{'sigil'}{'special_list'};
