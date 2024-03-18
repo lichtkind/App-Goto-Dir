@@ -83,6 +83,13 @@ sub get {
     my ($self, $property) = @_;
     $property_call->{ $property }->( $self ) if is_property( $property );
 }
+sub property_equals {
+    my ($self, $property, $value) = @_;
+    return 0 unless exists $property_call->{ $property } and defined $value;
+    return $self->{'dir'}->is_equal( $value ) if $property eq 'dir';
+    return $self->{$property} == $value if $num_property->{$property};
+    $self->{$property} eq $value ? 1 : 0;
+}
 sub is_property {
     my ($property) = @_;
     (defined $property and exists $property_call->{ $property }) ? 1 : 0;

@@ -11,9 +11,10 @@ my $entry_class = 'App::Goto::Dir::Data::Entry';
 sub new {
     my ($pkg, $name, $description, $special, $entries) = @_;
     return unless ref $entries eq 'ARRAY' and defined $name;
-    my @e = sort { $a->list_pos->get <=> $b->list_pos->get}
-            grep {$_->list_pos->get}
-            grep {ref $_ eq $entry_class } @$entries;
+    my @e = sort { $a->list_pos->get($name) <=> $b->list_pos->get($name) }
+            grep { $_->list_pos->get($name)}
+            grep { ref $_ eq $entry_class } @$entries;
+
     my $self = bless { name => $name, description => $description // '',
                        special => $special // 0, entry => \@e };
     $self->_refresh_list_pos;
@@ -35,46 +36,56 @@ sub all_entries     { @{$_[0]->{'entry'}} }
 sub entry_count     { int @{$_[0]->{'entry'}} }
 sub is_position     {
     my ($self, $pos) = @_;
-    my $count = $self->entry_count;
-    (defined $pos and (   ($pos >=  1 and $pos <=  $count)
-                       or ($pos <= -1 and $pos >= -$count) )) ? 1 : 0;
+    $pos = $self->resolve_position( $pos );
+#say "- $pos";
+    (defined $pos and exists $self->{'entry'}[$pos]) ? 1 : 0;
+}
+sub resolve_position     {
+    my ($self, $pos) = @_;
+    return undef unless defined $pos and $pos;
+    $pos > 0 ? (int($pos) - 1) : int($pos);
 }
 sub nearest_position {
     my ($self, $pos, $add_max) = @_; # third arg lets sub assume count += add_max
     my $count = $self->entry_count + ( $add_max // 0);
-    return $count unless defined $pos;
-    return 1 if abs($pos) < 1 ;
-    return $count if $pos >  $count;
-    return 1      if $pos < -$count;
-    $pos > 0 ? int($pos) : ($count + 1 + int($pos));
+    (not defined $pos or $pos > $count) ? $count    :
+      ($pos < -$count or abs($pos) < 1) ? 1         :
+      $pos > 0                          ? int($pos) : ( $count + 1 + int($pos) );
 }
 
-sub get_entry_by_pos { $_[0]->{'entry'}[ $_[0]->nearest_position($_[1]) - 1 ] }
+sub get_entry_by_pos {
+    my $pos = $_[0]->resolve_position($_[1]);
+#say "   - get pos real $pos";
+    (defined $pos and exists $_[0]->{'entry'}[ $pos ]) ? $_[0]->{'entry'}[ $pos ] : undef;
+}
 sub get_entry_by_property {
     my ($self, $property, $value) = @_;
-    $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
+#say " == prop";
+    return $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
     return unless App::Goto::Dir::Data::Entry::is_property( $property ) and defined $value;
     my @entries;
     for my $entry ($self->all_entries){
-        push @entries, $entry if $entry->get($property) eq $value;
+        push @entries, $entry if $entry->property_equals($property, $value);
     }
-    @entries;
+    @entries == 1 ? $entries[0] : @entries;
 }
 
 sub insert_entry {
     my ($self, $entry, $pos) = @_;
     return unless ref $entry eq $entry_class;
-    $pos = $self->nearest_position( $pos, 1 );
+    $pos = $self->nearest_position( $pos // -1, 1 );
+#say "insert pos $pos";
     $entry->list_pos->add_list( $self->name );
     splice @{$self->{'entry'}}, $pos-1, 0, $entry;
     $self->_refresh_list_pos( );
     $entry;
 }
-
 sub remove_entry {
     my ($self, $pos) = @_;
-    $pos = $self->nearest_position( $pos );
-    my $entry = splice @{$self->{'entry'}}, $pos-1, 1;
+    return undef unless $self->is_position($pos);
+    $pos = $self->resolve_position( $pos );
+    my $entry = splice @{$self->{'entry'}}, $pos, 1;
+#say "removed $entry";
     return unless ref $entry eq $entry_class;
     $entry->list_pos->remove_list( $self->name );
     $self->_refresh_list_pos( );

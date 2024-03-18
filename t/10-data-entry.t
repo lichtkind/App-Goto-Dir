@@ -35,7 +35,7 @@ is( $obj->edit('bang();'), 'bang();','could change entry script');
 is( $obj->script,          'bang();','entry has now a script');
 is( $obj->get('script'),   'bang();','entry script retrieved via universal getter');
 
-my ($dive, $dir) = File::Spec->splitpath( __FILE__ );
+my ($drive, $dir) = File::Spec->splitpath( __FILE__ );
 my $adir = App::Goto::Dir::Data::ValueType::Directory::normalize_dir( $dir );
 
 is( $obj->redirect($adir),    $adir, 'could change directory of entry');

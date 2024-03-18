@@ -12,7 +12,7 @@ my @special_entry_name = qw/last previous add del name/
 
 sub new {
     my ($pkg) = @_;
-    bless { list => {}, all_entry => [], entry_by_name => {}, special_entry => {} };
+    bless { list => {}, all_entry => [], entry_by_name => {}, special_entry => {}, current_list => '' };
 }
 
 sub restate {
