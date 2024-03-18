@@ -20,11 +20,11 @@ sub clone   { $_[0]->restate( $_[0]->state ) }
 
 #### accessors #########################################################
 
-sub get_position {
+sub get {
     my ($self, $list_name) = @_;
     $self->is_member_of($list_name) ? $self->{$list_name} : 0;
 }
-sub set_position {
+sub set {
     my ($self, $list_name, $pos) = @_;
     return unless $self->is_member_of( $list_name ) and defined $pos and $pos;
     $self->{$list_name} = int $pos;

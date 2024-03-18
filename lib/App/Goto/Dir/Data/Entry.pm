@@ -50,31 +50,53 @@ sub is_expired    { ( ! $_[0]->{'deleted'}->is_empty and defined $_[1]
 sub delete        { $_[0]->{'deleted'}->is_empty ? $_[0]->{'deleted'}->update : 0}
 sub undelete      { $_[0]->{'deleted'}->clear                                  }
 
-#### read accessors ####################################################
+#### accessors #########################################################
 
 sub dir           { $_[0]->{'dir'}->format( $_[1] ) }
 sub name          { $_[0]->{'name'} }
 sub script        { $_[0]->{'script'} }
 sub note          { $_[0]->{'note'} }
+
+sub redirect      { $_[0]->{'dir'}->set( $_[1] ) }
+sub rename        { $_[0]->{'name'}   = $_[1]   }
+sub edit          { $_[0]->{'script'} = $_[1]   }
+sub notate        { $_[0]->{'note'}   = $_[1]   }
+
+my $property_call = { age    => sub { $_[0]->age  },
+                      dir    => sub { $_[0]->dir   },
+                      name   => sub { $_[0]->name   },
+                      script => sub { $_[0]->script },
+                      note   => sub { $_[0]->note   },
+                      visits => sub { $_[0]->visits },
+                  last_visit => sub { $_[0]->last_visit },
+};
+my $num_property = { age    => 1,
+                     dir    => 0,
+                     name   => 0,
+                     script => 0,
+                     note   => 0,
+                     visits => 1,
+                 last_visit => 1,
+};
+
 sub get {
     my ($self, $property) = @_;
-    return unless defined $property;
-    return $self->age        if $property eq 'age';
-    return $self->dir        if $property eq 'dir';
-    return $self->name       if $property eq 'name';
-    return $self->script     if $property eq 'script';
-    return $self->note       if $property eq 'note';
-    return $self->visits     if $property eq 'visits';
-    return $self->last_visit if $property eq 'last_visit';
+    $property_call->{ $property }->( $self ) if is_property( $property );
 }
+sub is_property {
+    my ($property) = @_;
+    (defined $property and exists $property_call->{ $property }) ? 1 : 0;
+}
+sub is_nmeric_property {
+    my ($property) = @_;
+    $property->{$property} if is_property( $property );
+}
+
 sub list_pos      { $_[0]->{'list_pos'} }
 
 #### write accessors ###################################################
 
-sub redirect { $_[0]->{'dir'}->set( $_[1] ) }
-sub rename   { $_[0]->{'name'}   = $_[1]   }
-sub edit     { $_[0]->{'script'} = $_[1]   }
-sub notate   { $_[0]->{'note'}   = $_[1]   }
+
 
 ##### helper ###########################################################
 #### end ###############################################################
