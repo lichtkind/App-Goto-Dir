@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 77;
+use Test::More tests => 78;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
@@ -106,5 +106,6 @@ $l = App::Goto::Dir::Data::List->new('set', 'description', 1, [$h_entry, $def_en
 is( ref $l,                                    $class, 'restated poulated list, with deleted member');
 is( $l->entry_count,                                1, 'ignored deleted entry');
 is( $l->get_entry_by_pos(1),               $def_entry, 'right entry remained');
+is( $l->insert_entry( $def_entry, 1 ),          undef, 'can not add entry twice');
 
 exit 0;

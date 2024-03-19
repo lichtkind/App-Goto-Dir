@@ -73,6 +73,7 @@ sub get_entry_by_property {
 sub insert_entry {
     my ($self, $entry, $pos) = @_;
     return unless ref $entry eq $entry_class;
+    return if $entry->list_pos->is_member_of( $self->name );
     $pos = $self->nearest_position( $pos // -1, 1 );
 #say "insert pos $pos";
     $entry->list_pos->add_list( $self->name );
