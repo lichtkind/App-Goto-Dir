@@ -5,15 +5,13 @@ use App::Goto::Dir::Data::Entry;
 
 package App::Goto::Dir::Data::List;   # index: 1 .. count
 
-my $entry_class = 'App::Goto::Dir::Data::Entry';
-
 #### constructor #######################################################
 sub new {
     my ($pkg, $name, $description, $special, $entries) = @_;
     return unless ref $entries eq 'ARRAY' and defined $name;
     my @e = sort { $a->list_pos->get($name) <=> $b->list_pos->get($name) }
             grep { $_->list_pos->get($name)}
-            grep { ref $_ eq $entry_class } @$entries;
+            grep { is_entry( undef, $_ )  } @$entries;
 
     my $self = bless { name => $name, description => $description // '',
                        special => $special // 0, entry => \@e };
@@ -29,6 +27,8 @@ sub set_description { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] 
 sub is_special      { $_[0]->{'special'} ? 1 : 0}
 
 #### entry API #########################################################
+sub is_entry        { (ref $_[1] eq 'App::Goto::Dir::Data::Entry') ? 1 : 0 }
+sub has_entry       { ($_[0]->is_entry( $_[1] ) and $_[1]->list_pos->is_member_of( $_[0]->name )) ? 1 : 0 }
 sub all_entries     { @{$_[0]->{'entry'}} }
 sub entry_count     { int @{$_[0]->{'entry'}} }
 sub is_position     {
@@ -66,7 +66,7 @@ sub get_entry_by_property {
 
 sub insert_entry {
     my ($self, $entry, $pos) = @_;
-    return unless ref $entry eq $entry_class;
+    return unless $self->is_entry( $entry);
     return if $entry->list_pos->is_member_of( $self->name );
     $pos = $self->nearest_position( $pos // -1, 1 );
     $entry->list_pos->add_list( $self->name );
@@ -75,11 +75,15 @@ sub insert_entry {
     $entry;
 }
 sub remove_entry {
-    my ($self, $pos) = @_;
-    return undef unless $self->is_position($pos);
-    $pos = $self->resolve_position( $pos );
+    my ($self, $ID) = @_;
+    if ($self->is_entry( $ID )) {
+        return unless $self->has_entry( $ID );
+        $ID = $ID->list_pos->get( $self->name );
+    }
+    return undef unless $self->is_position( $ID );
+    my $pos = $self->resolve_position( $ID );
     my $entry = splice @{$self->{'entry'}}, $pos, 1;
-    return unless ref $entry eq $entry_class;
+    return unless $self->is_entry( $entry );
     $entry->list_pos->remove_list( $self->name );
     $self->_refresh_list_pos( );
     $entry;

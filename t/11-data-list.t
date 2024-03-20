@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 82;
+use Test::More tests => 84;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
@@ -107,6 +107,8 @@ is( ref $l,                                   $class, 'restated poulated list, w
 is( $l->entry_count,                               1, 'ignored deleted entry');
 is( $l->get_entry_by_pos(1),              $def_entry, 'right entry remained');
 is( $l->insert_entry( $def_entry, 1 ),         undef, 'can not add entry twice');
+is( $l->has_entry( $def_entry),                    1, 'default entry is member of list');
+is( $l->has_entry( $h_entry),                      0, 'home entry is not member of list');
 
 is( $l->empty_list( ),                             1, 'list had one member');
 is( $l->empty_list( ),                             0, 'list is now empty');

@@ -94,16 +94,8 @@ sub is_property {
     my ($property) = @_;
     (defined $property and exists $property_call->{ $property }) ? 1 : 0;
 }
-sub is_nmeric_property {
-    my ($property) = @_;
-    $property->{$property} if is_property( $property );
-}
 
 sub list_pos      { $_[0]->{'list_pos'} }
-
-#### write accessors ###################################################
-
-
 
 ##### helper ###########################################################
 #### end ###############################################################
