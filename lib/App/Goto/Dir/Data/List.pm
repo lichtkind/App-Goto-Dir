@@ -20,8 +20,6 @@ sub new {
     $self->_refresh_list_pos;
     $self;
 }
-sub state {  return {$_[0]->{'name'} => $_[0]->{'description'} }  }
-
 
 #### accessors #########################################################
 sub name            { $_[0]->{'name'} }
@@ -31,13 +29,11 @@ sub set_description { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] 
 sub is_special      { $_[0]->{'special'} ? 1 : 0}
 
 #### entry API #########################################################
-
 sub all_entries     { @{$_[0]->{'entry'}} }
 sub entry_count     { int @{$_[0]->{'entry'}} }
 sub is_position     {
     my ($self, $pos) = @_;
     $pos = $self->resolve_position( $pos );
-#say "- $pos";
     (defined $pos and exists $self->{'entry'}[$pos]) ? 1 : 0;
 }
 sub resolve_position     {
@@ -55,12 +51,10 @@ sub nearest_position {
 
 sub get_entry_by_pos {
     my $pos = $_[0]->resolve_position($_[1]);
-#say "   - get pos real $pos";
     (defined $pos and exists $_[0]->{'entry'}[ $pos ]) ? $_[0]->{'entry'}[ $pos ] : undef;
 }
 sub get_entry_by_property {
     my ($self, $property, $value) = @_;
-#say " == prop";
     return $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
     return unless App::Goto::Dir::Data::Entry::is_property( $property ) and defined $value;
     my @entries;
@@ -75,7 +69,6 @@ sub insert_entry {
     return unless ref $entry eq $entry_class;
     return if $entry->list_pos->is_member_of( $self->name );
     $pos = $self->nearest_position( $pos // -1, 1 );
-#say "insert pos $pos";
     $entry->list_pos->add_list( $self->name );
     splice @{$self->{'entry'}}, $pos-1, 0, $entry;
     $self->_refresh_list_pos( );
@@ -86,11 +79,18 @@ sub remove_entry {
     return undef unless $self->is_position($pos);
     $pos = $self->resolve_position( $pos );
     my $entry = splice @{$self->{'entry'}}, $pos, 1;
-#say "removed $entry";
     return unless ref $entry eq $entry_class;
     $entry->list_pos->remove_list( $self->name );
     $self->_refresh_list_pos( );
     $entry;
+}
+
+sub empty_list {
+    my ($self) = @_;
+    $self->{'entry'}[$_-1]->list_pos->remove_list( $self->name ) for 1 .. $self->entry_count;
+    my $c = $self->entry_count;
+    $self->{'entry'} = [];
+    $c;
 }
 
 sub report {
@@ -113,12 +113,10 @@ sub report {
 }
 
 ##### helper ###########################################################
-
 sub _refresh_list_pos {
     my ($self) = @_;
     $self->{'entry'}[$_-1]->list_pos->set( $self->name, $_ ) for 1 .. $self->entry_count;
 }
-
 #### end ###############################################################
 
 1;

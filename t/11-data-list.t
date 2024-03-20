@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 78;
+use Test::More tests => 82;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
@@ -95,17 +95,23 @@ is( $report =~ /\[02\]/, 1, 'second entry number is part of report');
 is( $report !~ /\[03\]/, 1, 'no third entry number is part of report');
 
 $l = App::Goto::Dir::Data::List->new('set', 'description', 1, [$h_entry, $def_entry]);
-is( ref $l,                                    $class, 'restated poulated list');
-is( $l->is_special,                                 1, 'restated list is special');
-is( $l->entry_count,                                2, 'list has two members');
-is( $l->get_entry_by_pos(1),                $h_entry, 'got first entry by positive index');
-is( $l->get_entry_by_pos(2),              $def_entry, 'got second entry by positive index');
-is( $l->remove_entry( 1 ),                  $h_entry, 'remove first entry');
+is( ref $l,                                  $class, 'restated poulated list');
+is( $l->is_special,                               1, 'restated list is special');
+is( $l->entry_count,                              2, 'list has two members');
+is( $l->get_entry_by_pos(1),               $h_entry, 'got first entry by positive index');
+is( $l->get_entry_by_pos(2),             $def_entry, 'got second entry by positive index');
+is( $l->remove_entry( 1 ),                 $h_entry, 'remove first entry');
 
 $l = App::Goto::Dir::Data::List->new('set', 'description', 1, [$h_entry, $def_entry]);
-is( ref $l,                                    $class, 'restated poulated list, with deleted member');
-is( $l->entry_count,                                1, 'ignored deleted entry');
-is( $l->get_entry_by_pos(1),               $def_entry, 'right entry remained');
-is( $l->insert_entry( $def_entry, 1 ),          undef, 'can not add entry twice');
+is( ref $l,                                   $class, 'restated poulated list, with deleted member');
+is( $l->entry_count,                               1, 'ignored deleted entry');
+is( $l->get_entry_by_pos(1),              $def_entry, 'right entry remained');
+is( $l->insert_entry( $def_entry, 1 ),         undef, 'can not add entry twice');
+
+is( $l->empty_list( ),                             1, 'list had one member');
+is( $l->empty_list( ),                             0, 'list is now empty');
+is( $l->entry_count,                               0, 'list has no member');
+
+is( $def_entry->list_pos->is_member_of('set'),     0, 'entry is no longer subscribed to list');
 
 exit 0;
