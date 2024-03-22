@@ -53,6 +53,7 @@ sub undelete      { $_[0]->{'deleted'}->clear                                  }
 #### accessors #########################################################
 
 sub dir           { $_[0]->{'dir'}->format( $_[1] ) }
+sub is_broken     {!$_[0]->{'dir'}->is_alive }
 sub name          { $_[0]->{'name'} }
 sub script        { $_[0]->{'script'} }
 sub note          { $_[0]->{'note'} }
