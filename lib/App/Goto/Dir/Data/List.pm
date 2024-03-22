@@ -28,7 +28,7 @@ sub is_special      { $_[0]->{'special'} ? 1 : 0}
 
 #### entry API #########################################################
 sub is_entry        { (ref $_[1] eq 'App::Goto::Dir::Data::Entry') ? 1 : 0 }
-sub has_entry       { ($_[0]->is_entry( $_[1] ) and $_[1]->list_pos->is_member_of( $_[0]->name )) ? 1 : 0 }
+sub has_entry       { ($_[0]->is_entry( $_[1] ) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
 sub all_entries     { @{$_[0]->{'entry'}} }
 sub entry_count     { int @{$_[0]->{'entry'}} }
 sub is_position     {
@@ -67,7 +67,7 @@ sub get_entry_by_property {
 sub insert_entry {
     my ($self, $entry, $pos) = @_;
     return unless $self->is_entry( $entry);
-    return if $entry->list_pos->is_member_of( $self->name );
+    return if $entry->is_in_list( $self->name );
     $pos = $self->nearest_position( $pos // -1, 1 );
     $entry->list_pos->add_list( $self->name );
     splice @{$self->{'entry'}}, $pos-1, 0, $entry;

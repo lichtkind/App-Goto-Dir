@@ -20,35 +20,35 @@ sub clone   { $_[0]->restate( $_[0]->state ) }
 
 #### accessors #########################################################
 
+sub list_names {
+    my $self = shift;
+    keys %$self
+}
+
 sub get {
     my ($self, $list_name) = @_;
-    $self->is_member_of($list_name) ? $self->{$list_name} : 0;
+    $self->is_in_list($list_name) ? $self->{ $list_name } : 0;
 }
 sub set {
     my ($self, $list_name, $pos) = @_;
-    return unless $self->is_member_of( $list_name ) and defined $pos and $pos;
+    return unless $self->is_in_list( $list_name ) and defined $pos and $pos;
     $self->{$list_name} = int $pos;
 }
 
 sub add_list {
     my ($self, $list_name, $pos) = @_;
-    return if $self->is_member_of( $list_name );
+    return if $self->is_in_list( $list_name );
     $self->{$list_name} = int ($pos // 0);
 }
 sub remove_list {
     my ($self, $list_name) = @_;
-    return unless $self->is_member_of( $list_name );
+    return unless $self->is_in_list( $list_name );
     delete $self->{$list_name};
 }
 
 #### predicates ########################################################
 
-sub is_member_of { (defined $_[1] and exists $_[0]->{ $_[1] }) ? 1 : 0 }
-
-sub list_names {
-    my $self = shift;
-    keys %$self
-}
+sub is_in_list { (defined $_[1] and exists $_[0]->{ $_[1] }) ? 1 : 0 }
 
 #### display ###########################################################
 

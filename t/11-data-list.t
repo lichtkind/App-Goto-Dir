@@ -114,6 +114,6 @@ is( $l->empty_list( ),                             1, 'list had one member');
 is( $l->empty_list( ),                             0, 'list is now empty');
 is( $l->entry_count,                               0, 'list has no member');
 
-is( $def_entry->list_pos->is_member_of('set'),     0, 'entry is no longer subscribed to list');
+is( $def_entry->is_in_list('set'),                 0, 'entry is no longer subscribed to list');
 
 exit 0;

@@ -5,10 +5,11 @@ use App::Goto::Dir::Data::List;
 
 package App::Goto::Dir::Data;
 
-my %special_list = (new => 'recently created directory entries',
-                    bin => 'deleted but not yet discarded entries',
-                    all => 'all entries, even the deleted',
-                    now => 'recently visited entries',);
+my %special_list = (new  => 'recently created directory entries',
+                    bin  => 'deleted but not yet discarded entries',
+                    all  => 'all entries, even the deleted',
+                    named =>'entries with name, without deleted',
+                    now  => 'recently visited entries, without deleted',);
 my %special_entry = (last => 'entry last visited',
                      prev => 'entry second last visited',
                      add  => 'last entry created',
@@ -18,8 +19,9 @@ my %special_entry = (last => 'entry last visited',
 #### de- constructors ##################################################
 sub new {
     my ($pkg) = @_;
-    my $self = { list => {}, current_list => 'all', entry_by_name => {}, entry_by_dir => {}, special_entry => {},
-                 undo_stack => [], redo_stack => [] };
+    my $self = { list => {}, current_list => 'all', entry_by_dir => {}, special_entry => {},
+                 undo_stack => [], redo_stack => [], config => {
+                } };
     $self->{'list'}{$_} = App::Goto::Dir::Data::List->new($_, $special_list{$_}, 1, []) for keys %special_list;
     $self->{'special_entry'}{$_} = '' for keys %special_entry;
     bless $self;
@@ -29,7 +31,7 @@ sub restate {
     my ($pkg, $state) = @_;
     return unless ref $state eq 'HASH' and ref $state->{'list'} eq 'HASH' and exists $state->{'current_list'};
     my $self = { list => {}, current_list => '',
-                 entry_by_name => {}, entry_by_dir => {}, special_entry => {},
+                 entry_by_dir => {}, special_entry => {},
                  undo_stack => [], redo_stack => [] };
     $self->{'current_list'} = $state->{'current_list'};
     my @entries = map { App::Goto::Dir::Data::Entry->restate($_) } @{$state->{'entry'}};
@@ -52,18 +54,18 @@ sub state {
                                   ? $self->{'special_entry'}{$_}->dir : '' for keys %special_entry;
     $state;
 }
+sub set_config  { $_[0]->{'config'} = $_[1] if ref $_[1] eq 'HASH' }
 
 #### list API ###########################################################
+sub list_exists  { (defined $_[1] and exists $_[0]->{'list'}{$_[1]}) ? 1 : 0 }
+sub get_list     { $_[0]->{'list'}{$_[1]} if list_exists($_[1]) }
+sub get_list_or_current { $_[0]->get_list($_[1]) // $_[0]->get_current_list}
 sub new_list {
     my ($self, $list_name, $description, @elems) = @_;
     return 'need a list name' unless defined $list_name and $list_name;
     return 'list already exists' if exists $self->{'list'}{ $list_name };
     $self->{'list'}{ $list_name } = App::Goto::Dir::Data::List->new( $list_name, $description, 0, [@elems] );
 }
-sub list_exists  { (defined $_[1] and exists $_[0]->{'list'}{$_[1]}) ? 1 : 0 }
-sub get_list     { $_[0]->{'list'}{$_[1]} if list_exists($_[1]) }
-sub get_list_or_current { $_[0]->get_list($_[1]) // $_[0]->get_current_list}
-
 sub remove_list  {
     my ($self, $list_name) = @_;
     return if not exists $self->{'list'}{ $list_name } or $self->{'list'}{ $list_name }->is_special;
@@ -71,8 +73,8 @@ sub remove_list  {
     delete $self->{'list'}{ $list_name };
 }
 
-sub set_current_list      { $_[0]->{'current_list'} = $_[1] if $_[0]->list_exists( $_[1] ) }
 sub get_current_list      { $_[0]->{'list'}{ $_[0]->{'current_list'} }   }
+sub set_current_list      { $_[0]->{'current_list'} = $_[1] if $_[0]->list_exists( $_[1] ) }
 sub report      {
     my $self = shift;
     my $report = " - listing of all lists :\n";
@@ -184,15 +186,36 @@ sub delete_entry {
         next if $list->name eq 'all' or $list->name eq 'bin';
         $list->remove_entry( $entry );
     }
+    $entry->delete();
     $bin->insert_entry( $entry, -1 );
+}
+
+sub undelete_entry {
+    my ($self, $origin, $list, $target) = @_;
+    return "missing ID (position or name) of entry to undelete: $origin" if not defined $origin or not $origin;
+    my $bin = $self->{'list'}{'bin'};
+    my $entry = ($origin =~ /^d+$/)
+              ? $bin->get_entry_by_pos( $origin )
+              : $bin->get_entry_by_property( 'name', $origin );
+    return 'unknown ID target (position or name) in list '.$list->name unless ref $entry;
+    $entry->delete();
+    return 'this entry is already deleted' if $bin->has_entry( $entry );
+    for my $list (values %{$self->{'list'}}){
+        next if $list->name eq 'all' or $list->name eq 'bin';
+        $list->remove_entry( $entry );
+    }
+    $entry->undelete();
+    #$bin->insert_entry( $entry, -1 );
 }
 
 ########################################################################
 sub undo         {
     my ($self) = @_;
-} # TODO
+}
+
 sub redo         {
     my ($self) = @_;
 }
+########################################################################
 
 1;
