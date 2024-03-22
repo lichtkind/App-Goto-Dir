@@ -203,38 +203,26 @@ sub delete_entry {
     return $entry unless ref $entry;
     my $bin = $self->{'list'}{'bin'};
     return 'this entry is already deleted' if $bin->has_entry( $entry );
-
-    $list = $self->get_list_or_current( $list );
-    return 'unknown list name' unless ref $list;
-    my $entry = ($ID =~ /^d+$/)
-              ? $list->get_entry_by_pos( $ID )
-              : $list->get_entry_by_property( 'name', $ID );
-    return 'unknown ID target (position or name) in list '.$list->name unless ref $entry;
-    return 'this entry is already deleted' if $bin->has_entry( $entry );
     for my $list (values %{$self->{'list'}}){
         next if $list->name eq 'all' or $list->name eq 'bin';
         $list->remove_entry( $entry );
     }
     $entry->delete();
-    $bin->insert_entry( $entry, -1 );
+    $bin->insert_entry( $entry, $self->{'config'}{'list'}{'default_insert_position'} );
 }
 
 sub undelete_entry {
     my ($self, $origin, $list, $target) = @_;
-    return "missing ID (position or name) of entry to undelete: $origin" if not defined $origin or not $origin;
+    my $entry = $self->_get_entry( $origin, 'bin' );
+    return $entry unless ref $entry;
     my $bin = $self->{'list'}{'bin'};
-    my $entry = ($origin =~ /^d+$/)
-              ? $bin->get_entry_by_pos( $origin )
-              : $bin->get_entry_by_property( 'name', $origin );
-    return 'unknown ID target (position or name) in list '.$list->name unless ref $entry;
-    $entry->delete();
-    return 'this entry is already deleted' if $bin->has_entry( $entry );
-    for my $list (values %{$self->{'list'}}){
-        next if $list->name eq 'all' or $list->name eq 'bin';
-        $list->remove_entry( $entry );
-    }
+    return 'entry is not deleted and can not be undeleted' if not $bin->has_entry( $entry );
     $entry->undelete();
-    #$bin->insert_entry( $entry, -1 );
+    $bin->remove_entry( $entry );
+    $list = $self->get_list_or_current( $list );
+    return 'unknown list name' unless ref $list;
+    my $pos = $self->_to_pos( $target, $list );
+    $list->insert_entry( $entry, $pos // $self->{'config'}{'list'}{'default_insert_position'}  );
 }
 
 ########################################################################
@@ -262,6 +250,15 @@ sub _get_entry {
         $list_obj->get_entry_by_pos( $ID );
     }
     else {  $self->entry_by_name( $ID ) // 'unknown entry name' }
+}
+sub _to_pos {
+    my ($self, $ID, $list) = @_;
+    return 'missing entry ID (position or name)' if not defined $ID or not $ID;
+    if ($ID =~ /^d+$/){ return $ID }
+    else {
+        my $entry = $self->entry_by_name( $ID );
+        return $entry->list_pos->get( $list ) + 1;
+    }
 }
 ########################################################################
 
