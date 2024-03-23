@@ -20,7 +20,7 @@ my %special_entry = (last => 'entry last visited',
 #### de- constructors ##################################################
 sub new {
     my ($pkg) = @_;
-    my $self = { list => {}, current_list => 'all', entry_by_dir => {}, entry_by_name => {}, special_entry => {}, config => {
+    my $self = { list => {}, current_list => 'all', special_entry => {}, config => {
                      entry => { discard_deleted_in_days => 30,
                                 see_as_new_in_days => 40,
                                 overwrite_names => 0,
@@ -37,19 +37,17 @@ sub new {
 sub restate {
     my ($pkg, $state, $config) = @_;
     return unless ref $state eq 'HASH' and ref $state->{'list'} eq 'HASH' and exists $state->{'current_list'};
-    my $self = { list => {}, current_list => '', entry_by_dir => {}, entry_by_name => {}, special_entry => {},};
+    my $self = { list => {}, current_list => '', special_entry => {},};
     $self->{'current_list'} = $state->{'current_list'};
     my @entries = grep { !$_->is_expired( $config->{'entry'}{'discard_deleted_in_days'} ) }
                   map { App::Goto::Dir::Data::Entry->restate($_) } @{$state->{'entry'}};
-    map { $self->{'entry_by_name'}{$_->name} = $_ if $_->name } @entries;
-    map { $self->{'entry_by_dir'}{$_->dir} = $_ if $_->dir } @entries;
     $self->{'list'}{$_} = App::Goto::Dir::Data::List->new (
                               $_, $state->{'list'}{$_},
                               ((exists $special_list{$_}) ? 1 : 0), \@entries ) for keys %{$state->{'list'}};
     $self->{'list'}{'broken'}->empty_list();
     map { $self->{'list'}{'broken'}->insert_entry( $_, -1) if $_->is_broken } @entries;
     $self->{'special_entry'}{$_} = $state->{'special_entry'}{$_}
-                                 ? $self->{'entry_by_dir'}{$_} : '' for keys %special_entry;
+                                 ? $self->{'list'}{'all'}->entry_by_dir($_) : '' for keys %special_entry;
     bless $self;
 }
 
@@ -67,26 +65,32 @@ sub get_config  { $_[0]->{'config'} }
 sub set_config  { $_[0]->{'config'} = $_[1] if ref $_[1] eq 'HASH' }
 
 #### list API ###########################################################
-sub list_exists  { (defined $_[1] and exists $_[0]->{'list'}{$_[1]}) ? 1 : 0 }
-sub get_list     { $_[0]->{'list'}{$_[1]} if list_exists($_[1]) }
-sub get_list_or_current { $_[0]->get_list($_[1]) // $_[0]->get_current_list}
-sub is_list_special { (defined $_[1] and exists $special_list{$_[1]}) ? 1 : 0 }
+sub list_exists  { (defined $_[1] and exists $_[0]->{'list'}{$_[1]}) ? 1 : 0 }  # ~name --> ?
+sub is_list_special { (defined $_[1] and exists $special_list{$_[1]}) ? 1 : 0 } # ~name --> ?
+sub get_list     { $_[0]->{'list'}{$_[1]} if list_exists($_[1]) }               # ~name --> .list
+sub get_list_or_current { $_[0]->get_list($_[1]) // $_[0]->get_current_list}    # ~name --> .list
 sub new_list {
     my ($self, $list_name, $description, @elems) = @_;
-    return 'need a list name' unless defined $list_name and $list_name;
-    return 'list already exists' if exists $self->{'list'}{ $list_name };
+    return 'need a name for the list to create' unless defined $list_name and $list_name;
+    return 'name for new list already exists' if exists $self->{'list'}{ $list_name };
     $self->{'list'}{ $list_name } = App::Goto::Dir::Data::List->new( $list_name, $description, 0, [@elems] );
+}
+sub clone_list {
+    my ($self, $source, $target, $description) = @_;
+    return 'source list does not exists' if defined $source and not $self->list_exists( $source );
+    $source = $self->get_list_or_current( $source );
+    $self->new_list( $target, $description, [ $source->all_entries ]);
 }
 sub remove_list  {
     my ($self, $list_name) = @_;
-    return if not exists $self->{'list'}{ $list_name } or $self->{'list'}{ $list_name }->is_special;
+    return if not $self->list_exists($list_name) or $self->is_list_special($list_name);
     $self->{'list'}{ $list_name }->empty_list;
     delete $self->{'list'}{ $list_name };
 }
 
-sub get_current_list      { $_[0]->{'list'}{ $_[0]->{'current_list'} }   }
-sub set_current_list      { $_[0]->{'current_list'} = $_[1] if $_[0]->list_exists( $_[1] ) }
-sub report                { listing of all lists
+sub get_current_list      { $_[0]->{'list'}{ $_[0]->{'current_list'} }   }     # --> .list
+sub set_current_list      { $_[0]->{'current_list'} = $_[1] if $_[0]->list_exists( $_[1] ) } # .list --> .list
+sub report                { # listing of all lists                               --> ~report
     my $self = shift;
     my $report = " - listing of all lists :\n";
     my @order = sort { $self->{'list'}[$a]->name cmp $self->{'list'}[$b]->name }
@@ -102,11 +106,12 @@ sub report                { listing of all lists
 }
 
 #### entry API #########################################################
-sub all_entries      { @{$_[0]->{'entry_by_dir'}} }
-sub entry_by_dir     { $_[0]->{'entry_by_dir'} { $_[1] } if defined $_[1] } # by normalized directory
-sub entry_by_name    { $_[0]->{'entry_by_name'}{ $_[1] } if defined $_[1] }
-sub special_entry    { $_[0]->{'special_entry'}{ $_[1] } if defined $_[1] }
-sub get_entry_by_pos {
+sub all_entries      { $_[0]->{'list'}{'all'}->all_entries }                #        --> @.entry
+sub special_entry    { $_[0]->{'special_entry'}{ $_[1] } if defined $_[1] } # ~sname -->  .entry
+sub entry_by_property{ $_[0]->{'list'}{'all'}->get_entry_by_property( $_[1], $_[2]) if defined $_[2] } # ~dir -->  .entry   by normalized directory
+sub entry_by_dir     { $_[0]->entry_by_property( 'dir', $_[1] ) }
+sub entry_by_name    { $_[0]->entry_by_property( 'name', $_[1] ) }
+sub entry_by_pos     {
     my ($self, $list, $pos) = @_;
     $list = $self->get_list_or_current( $list );
     $list->get_entry_by_pos( $pos ) if ref $list;
@@ -133,17 +138,31 @@ sub new_entry {
 }
 
 sub rename_entry {
-    my ($self, $list, $ID, $new_name) = @_;
-    return 'missing entry ID (position or name)' if not defined $ID or not $ID;
-    my $entry = $self->_get_entry( $ID, $list );
-    return $entry unless ref $entry;
+    my ($self, $old_name, $new_name) = @_;
+    return 'need two name strings for an entry rename'
+        unless defined $old_name and $old_name and defined $new_name;
+    my $entry = $self->entry_by_name( $old_name );
+    return "name '$old_name' is not a used by any entry" unless ref $entry;
+    if ($new_name and ref $self->entry_by_name( $new_name )
+        and $self->{'config'}{'entry'}{'overwrite_names'}) { $self->rename_entry( $new_name, '') }
+    else                                                   { return "entry name: '$new_name' is already used" }
     $self->{'list'}{'named'}->remove_entry( $entry );
-    delete $self->{'entry_by_name'}{ $entry->name };
-    $new_name //= '';
     $entry->rename( $new_name );
-    return unless $new_name;
-    $self->{'list'}{'named'}->insert_entry( $entry, $self->{'config'}{'list'}{'default_insert_position'} );
-    $self->{'entry_by_name'}{ $new_name } = $entry;
+    $self->{'list'}{'named'}->insert_entry( $entry, $self->{'config'}{'list'}{'default_insert_position'} ) if $new_name;
+    $entry;
+}
+
+sub redirect_entry {
+    my ($self, $old_dir, $new_dir) = @_;
+    return 'need two dir strings for an entry dir change'
+        unless defined $old_dir and $old_dir and defined $new_dir and $new_dir;
+    my $entry = $self->entry_by_dir( $old_dir );
+    return " directory: '$old_dir' is not in any entry" unless ref $entry;
+    $entry->redirect( $new_dir );
+    $self->{'list'}{'broken'}->remove_entry( $entry );
+    $self->{'list'}{'broken'}->insert_entry( $entry, $self->{'config'}{'list'}{'default_insert_position'} )
+        if $entry->is_broken;
+    $entry;
 }
 
 sub copy_entry {
@@ -194,7 +213,7 @@ sub remove_entry {
     $list->remove_entry( $entry );
 }
 
-sub delete_entry {
+sub delete_entry { # --> .entry | ~!
     my ($self, $list, $ID) = @_;
     my $entry = $self->_get_entry( $ID, $list );
     return $entry unless ref $entry;
@@ -231,23 +250,12 @@ sub _pos_for_list {
 }
 
 sub _get_entry {
-    my ($self, $ID, $list) = @_;
-    return 'missing entry ID (position or name)' if not defined $ID or not $ID;
-    if ($ID =~ /^d+$/){
-        my $list_obj = $self->get_list_or_current();
-        return 'unknown list name' unless ref $list_obj;
-        $list_obj->get_entry_by_pos( $ID );
-    }
-    else {  $self->entry_by_name( $ID ) // 'unknown entry name' }
-}
-sub _to_pos {
-    my ($self, $ID, $list) = @_;
-    return 'missing entry ID (position or name)' if not defined $ID or not $ID;
-    if ($ID =~ /^d+$/){ return $ID }
-    else {
-        my $entry = $self->entry_by_name( $ID );
-        return $entry->list_pos->get( $list ) + 1;
-    }
+    my ($self, $list_name, $pos) = @_;
+    return 'got no list position' unless defined $pos;
+    my $list = $self->get_list_or_current( $list_name );
+    return "got unknown list name: $list_name" unless ref $list;
+    my $entry = $list->get_entry_by_pos( $pos );
+    return ref($entry) ? $entry : "position: $pos is out of range in list ".$list->name;
 }
 ########################################################################
 

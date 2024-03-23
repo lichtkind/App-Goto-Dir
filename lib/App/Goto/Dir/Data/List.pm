@@ -75,7 +75,7 @@ sub insert_entry {
     $entry;
 }
 sub remove_entry {
-    my ($self, $ID) = @_;
+    my ($self, $ID) = @_; # ID = pos or entry objecty
     if ($self->is_entry( $ID )) {
         return unless $self->has_entry( $ID );
         $ID = $ID->list_pos->get( $self->name );
