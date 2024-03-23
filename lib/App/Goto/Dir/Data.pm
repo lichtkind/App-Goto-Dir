@@ -131,7 +131,6 @@ sub new_entry {
     $self->{'list'}{'new'}->insert_entry( $entry, $self->_pos_for_list('new', $list, $pos) );
     $self->{'list'}{'named'}->insert_entry( $entry, $self->_pos_for_list('named', $list, $pos) ) if $name;
     $self->{'list'}{'broken'}->insert_entry( $entry, $self->_pos_for_list('broken', $list, $pos) ) if $entry->is_broken;
-
     $list = $self->get_list_or_current( $list );
     return $entry if not ref $list or $list->has_entry( $entry );
     $list->insert_entry( $entry, $pos // $self->{'config'}{'list'}{'default_insert_position'} );
@@ -166,56 +165,50 @@ sub redirect_entry {
 }
 
 sub copy_entry {
-    my ($self, $list_origin, $ID_origin, $list_target, $ID_target) = @_;
-    return 'missing source entry ID (position or name)' if not defined $ID_origin or not $ID_origin;
-    my $entry = $self->_get_entry( $ID_origin, $list_origin );
+    my ($self, $list_origin, $pos_origin, $list_target, $pos_target) = @_;
+    my $entry = $self->_get_entry( $list_origin, $pos_origin, 'source' );
     return $entry unless ref $entry;
-    return "can not copy deleted entrie" if $entry->is_in_list('bin');
+    return "can not copy deleted entry" if $entry->is_in_list('bin');
 
     my $list = $self->get_list_or_current($list_target);
     return "unknonw target list" unless ref $list;
     return 'can not copy into special list' if $self->is_list_special( $list->name );
-    my $pos = $list->get_entry_by_property( 'name', $ID_target ) // $list->get_entry_by_pos( $ID_target );
-
-    $pos = (ref $pos) ? $pos->list_pos->get( $list->name ) : $self->{'config'}{'list'}{'default_insert_position'};
+    my $pos = $pos_target // $self->{'config'}{'list'}{'default_insert_position'};
     $list->insert_entry( $entry, $pos);
 }
 
 
 sub move_entry {
-    my ($self, $list_origin, $ID_origin, $list_target, $ID_target) = @_;
-    return 'missing source entry ID (position or name)' if not defined $ID_origin or not $ID_origin;
-    my $entry = $self->_get_entry( $ID_origin, $list_origin );
+    my ($self, $list_origin, $pos_origin, $list_target, $pos_target) = @_;
+    my $entry = $self->_get_entry( $list_origin, $pos_origin, 'source' );
     return $entry unless ref $entry;
+    return "can notmove deleted entry" if $entry->is_in_list('bin');
 
     my $i_list = $self->get_list_or_current($list_origin);
-    my $o_list = $self->get_list_or_current($list_origin);
+    my $o_list = $self->get_list_or_current($list_target);
     return "unknonw source list" unless ref $i_list;
     return "unknonw target list" unless ref $o_list;
     return 'can not move entry into or out a special list'
         if ($self->is_list_special( $i_list->name ) or $self->is_list_special( $o_list->name ))
         and $i_list->name ne $o_list->name;
-
     $i_list->remove_entry( $entry );
-    my $pos = $o_list->get_entry_by_property( 'name', $ID_target ) // $o_list->get_entry_by_pos( $ID_target );
-
-    $pos = (ref $pos) ? $pos->list_pos->get( $o_list->name ) : $self->{'config'}{'list'}{'default_insert_position'};
+    my $pos = $pos_target // $self->{'config'}{'list'}{'default_insert_position'};
     $o_list->insert_entry( $entry, $pos);
 }
 
 sub remove_entry {
-    my ($self, $list, $ID) = @_;
-    my $entry = $self->_get_entry( $ID, $list );
+    my ($self, $list_name, $pos) = @_;
+    my $entry = $self->_get_entry( $list_name, $pos );
     return $entry unless ref $entry;
-    $list = $self->get_list_or_current( $list );
+    my $list = $self->get_list_or_current( $list_name );
     return 'unknown list name' unless ref $list;
-    return 'can not remove from special list' if $self->is_list_special( $list->name );
+    return 'can not remove from special list' if $self->is_list_special( $list_name );
     $list->remove_entry( $entry );
 }
 
 sub delete_entry { # --> .entry | ~!
-    my ($self, $list, $ID) = @_;
-    my $entry = $self->_get_entry( $ID, $list );
+    my ($self, $list, $pos) = @_;
+    my $entry = $self->_get_entry( $list, $pos );
     return $entry unless ref $entry;
     my $bin = $self->{'list'}{'bin'};
     return 'this entry is already deleted' if $bin->has_entry( $entry );
@@ -228,17 +221,12 @@ sub delete_entry { # --> .entry | ~!
 }
 
 sub undelete_entry {
-    my ($self, $origin, $list, $target) = @_;
-    my $entry = $self->_get_entry( $origin, 'bin' );
-    return $entry unless ref $entry;
+    my ($self, $entry) = @_;
+    return unless ref $entry eq 'App::Goto::Dir::Data::Entry';
     my $bin = $self->{'list'}{'bin'};
     return 'entry is not deleted and can not be undeleted' if not $bin->has_entry( $entry );
     $entry->undelete();
     $bin->remove_entry( $entry );
-    $list = $self->get_list_or_current( $list );
-    return 'unknown list name' unless ref $list;
-    my $pos = $self->_to_pos( $target, $list );
-    $list->insert_entry( $entry, $pos // $self->{'config'}{'list'}{'default_insert_position'}  );
 }
 
 ##### helper ###########################################################
@@ -250,10 +238,10 @@ sub _pos_for_list {
 }
 
 sub _get_entry {
-    my ($self, $list_name, $pos) = @_;
-    return 'got no list position' unless defined $pos;
+    my ($self, $list_name, $pos, $name) = @_;
+    return 'got no '.(defined ($name) ? $name.' ' : '').'list position' unless defined $pos;
     my $list = $self->get_list_or_current( $list_name );
-    return "got unknown list name: $list_name" unless ref $list;
+    return "got unknown '.(defined ($name) ? $name.' ' : '').'list name: $list_name" unless ref $list;
     my $entry = $list->get_entry_by_pos( $pos );
     return ref($entry) ? $entry : "position: $pos is out of range in list ".$list->name;
 }
