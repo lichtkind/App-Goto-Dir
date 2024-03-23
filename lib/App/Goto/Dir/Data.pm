@@ -20,8 +20,7 @@ my %special_entry = (last => 'entry last visited',
 #### de- constructors ##################################################
 sub new {
     my ($pkg) = @_;
-    my $self = { list => {}, current_list => 'all', entry_by_dir => {}, entry_by_name => {}, special_entry => {},
-                 undo_stack => [], redo_stack => [], config => {
+    my $self = { list => {}, current_list => 'all', entry_by_dir => {}, entry_by_name => {}, special_entry => {}, config => {
                      entry => { discard_deleted_in_days => 30,
                                 see_as_new_in_days => 40,
                                 overwrite_names => 0,
@@ -38,9 +37,7 @@ sub new {
 sub restate {
     my ($pkg, $state, $config) = @_;
     return unless ref $state eq 'HASH' and ref $state->{'list'} eq 'HASH' and exists $state->{'current_list'};
-    my $self = { list => {}, current_list => '',
-                 entry_by_dir => {}, entry_by_name => {}, special_entry => {},
-                 undo_stack => [], redo_stack => [] };
+    my $self = { list => {}, current_list => '', entry_by_dir => {}, entry_by_name => {}, special_entry => {},};
     $self->{'current_list'} = $state->{'current_list'};
     my @entries = grep { !$_->is_expired( $config->{'entry'}{'discard_deleted_in_days'} ) }
                   map { App::Goto::Dir::Data::Entry->restate($_) } @{$state->{'entry'}};
@@ -225,14 +222,6 @@ sub undelete_entry {
     $list->insert_entry( $entry, $pos // $self->{'config'}{'list'}{'default_insert_position'}  );
 }
 
-########################################################################
-sub undo         {
-    my ($self) = @_;
-}
-
-sub redo         {
-    my ($self) = @_;
-}
 ##### helper ###########################################################
 sub _pos_for_list {
     my ($self, $wanted_list, $got_list, $pos) = @_;
