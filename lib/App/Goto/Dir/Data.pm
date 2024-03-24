@@ -8,6 +8,7 @@ package App::Goto::Dir::Data;
 my %special_list = (new  => 'recently created directory entries',
                     bin  => 'deleted but not yet discarded entries',
                     all  => 'all entries, even the deleted',
+                    stay => 'all not deleted entries',
                     now  => 'recently visited entries, without deleted',
                     named =>'entries with name, without deleted',
                     broken => 'entries with not existing directories, not deleted',);
@@ -22,7 +23,8 @@ sub new {
     my ($pkg) = @_;
     my $self = { list => {}, current_list => 'all', special_entry => {}, config => {
                      entry => { discard_deleted_in_days => 30,
-                                see_as_new_in_days => 40,
+                                new_for_days => 40,
+                                recent_for_days => 40,
                                 overwrite_names => 0,
                                 name_length_max => 6, },
                      list => { default_insert_position => -1,
@@ -42,10 +44,12 @@ sub restate {
     my @entries = grep { !$_->is_expired( $config->{'entry'}{'discard_deleted_in_days'} ) }
                   map { App::Goto::Dir::Data::Entry->restate($_) } @{$state->{'entry'}};
     $self->{'list'}{$_} = App::Goto::Dir::Data::List->new (
-                              $_, $state->{'list'}{$_},
-                              ((exists $special_list{$_}) ? 1 : 0), \@entries ) for keys %{$state->{'list'}};
-    $self->{'list'}{'broken'}->empty_list();
+                              $_, $state->{'list'}{$_}, ((exists $special_list{$_}) ? 1 : 0), \@entries )
+                              for keys %{$state->{'list'}};
+    $self->{'list'}{'broken'}->empty_list() for qw/broken new now/;
     map { $self->{'list'}{'broken'}->insert_entry( $_, -1) if $_->is_broken } @entries;
+    map { $self->{'list'}{'new'}->insert_entry( $_, -1) if $_->age <= $config->{'entry'}{'new_for_days'} } @entries;
+    map { $self->{'list'}{'now'}->insert_entry( $_, -1) if $_->days_not_visited > $config->{'entry'}{'recent_for_days'} } @entries;
     $self->{'special_entry'}{$_} = $state->{'special_entry'}{$_}
                                  ? $self->{'list'}{'all'}->entry_by_dir($_) : '' for keys %special_entry;
     bless $self;
@@ -91,16 +95,14 @@ sub remove_list  {
 sub get_current_list      { $_[0]->{'list'}{ $_[0]->{'current_list'} }   }     # --> .list
 sub set_current_list      { $_[0]->{'current_list'} = $_[1] if $_[0]->list_exists( $_[1] ) } # .list --> .list
 sub report                { # listing of all lists                               --> ~report
-    my $self = shift;
-    my $report = " - listing of all lists :\n";
-    my @order = sort { $self->{'list'}[$a]->name cmp $self->{'list'}[$b]->name }
-                     0 .. $#{$_[0]->{'list'}};
+    my ($self, $order) = @_;
+    my $report = " - listing of all lists (name, members, special, description) :\n";
+    my @names = sort { $a cmp $b } keys %{$_[0]->{'list'}};
 
-    for my $i (@order){
+    for my $i (1 .. int @names){
         my $list = $self->{'list'}[$i-1];
-        $report .= sprintf "  [%02u]  %6s %1s %s\n", $i, $list->name ,
-                                                    ($list->is_special) ? '*' : ' ',
-                                                     $list->description;
+        $report .= sprintf "  [%02u] %6s (%03u) %1s %s30\n",
+                   $i, $list->name, $list->entry_count, ($list->is_special) ? '*' : ' ', $list->description;
     }
     $report
 }
