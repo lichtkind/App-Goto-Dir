@@ -5,19 +5,20 @@ use App::Goto::Dir::Data::List;
 
 package App::Goto::Dir::Data;
 
-my %special_list = (new  => 'recently created directory entries',
-                    bin  => 'deleted but not yet discarded entries',
-                    all  => 'all entries, even the deleted',
-                    stay => 'all not deleted entries',
-                    now  => 'recently visited entries, without deleted',
-                    named =>'entries with name, without deleted',
+my %special_list = (   new => 'recently created directory entries',
+                       bin => 'deleted but not yet discarded entries',
+                       all => 'all entries, even the deleted',
+                    # stay => 'all not deleted entries',
+                       now => 'recently visited entries, without deleted',
+                     named => 'entries with name, without deleted',
                     broken => 'entries with not existing directories, not deleted',);
-my %special_entry = (last => 'entry last visited',
-                     prev => 'entry second last visited',
-                     add  => 'last entry created',
-                     del  => 'last entry deleted',
-                     name => 'last entry named',
-                     move => 'last entry copied, moved or removed',);
+my %special_entry = ( last => 'entry last visited',
+                      prev => 'entry second last visited',
+                      add  => 'last entry created',
+                      del  => 'last entry deleted',
+                      name => 'last entry named',
+                      move => 'last entry copied, moved or removed',);
+
 #### de- constructors ##################################################
 sub new {
     my ($pkg) = @_;
