@@ -3,17 +3,13 @@ use warnings;
 
 package App::Goto::Dir::Config::Default;
 
-our $file = "goto_dir_config.yml";
-our $dfile = "goto_dir_config_default.yml";
-our $loaded;
-our (%command_shortcut, %option_shortcut, %option_name);
-
-our $default = {
-          file => {              data => 'places.yml',
-                               backup => 'places.bak.yml',
+sub get {
+    return {
+        file => {              data => 'places.yaml',
+                               backup => 'places.bak.yaml',
                                return => 'last_choice',
                   },
-         entry => {   name_length_max => 5,
+       entry => {   name_length_max => 5,
                      position_default => -1,
               prefer_in_name_conflict => 'new', # old
                  prevent_dir_conflict => 0, #
@@ -21,7 +17,7 @@ our $default = {
                            dir_exists => 1,
                     time_stamp_format => 'd.m.y  t',
                   },
-          list => {     deprecate_new => 1209600,
+        list => {     deprecate_new => 1209600,
                         deprecate_bin => 1209600,
                        deprecate_used => 1209600,
                            start_with => 'current',
@@ -47,7 +43,7 @@ our $default = {
                             sorted_by => 'visit_time',
                          sort_default => 'position',
                   },
-          syntax => {           sigil => {
+        syntax => {           sigil => {
                               short_command => '-',
                                  entry_name => ':',
                                        help => '?',
@@ -100,7 +96,7 @@ our $default = {
                                         },
                                 },
                   },
-};
-
+    };
+}
 
 1;

@@ -4,45 +4,50 @@ use warnings;
 package App::Goto::Dir::Config;
 
 use File::Spec;
+use File::HomeDir;
 use YAML;
 use App::Goto::Dir::Config::Default;
 
-our $file = "goto_dir_config.yml";          # fall back
-our $dfile = "goto_dir_config_default.yml";
-our $loaded;
-our (%command_shortcut, %option_shortcut, %option_name);
+my $file_name = File::Spec->catfile( File::HomeDir->my_home, '.config', 'goto-dir', 'settings.yaml');
+my $data;
 
 sub load {
-    __PACKAGE__->reset unless -r $file;
-    $loaded = YAML::LoadFile($file);
+    my $default = App::Goto::Dir::Config::Default::get;
+    return fall_back() unless -r $file_name;
 
-    my $option = $loaded->{'syntax'}{'option_shortcut'};
-    my $command = $loaded->{'syntax'}{'command_shortcut'};
-    for my $cmd (keys %$option){
-        for my $opt (keys %{$option->{$cmd}}){
-            for my $l (1 .. length $opt){
-                my $part_opt = substr $opt, 0, $l;
-                if (exists $option_name{$cmd}{$part_opt}){ $option_name{$cmd}{$part_opt} = 0 }
-                else                                     { $option_name{$cmd}{$part_opt} = $opt }
-            }
-        }
-    }
-    for my $cmd (keys %$option){
-        $option_shortcut{$cmd} = {  map { $option->{$cmd}{$_} => $_ } keys %{$option->{$cmd}}  };
-    }
-    %command_shortcut = map { $command->{$_} => $_ } keys %$command;
-
-    $loaded;
+    $data = YAML::LoadFile( $file_name );
+    $data = (ref $data eq 'ARRAY') ? $data->[0] : $data;
+    $data = (ref $data eq 'HASH') ? $data : $default;
+    return get();
 }
 
-sub reset {
-    YAML::DumpFile( $file, $default );
-    YAML::DumpFile( $dfile, $default );
+sub fall_back {
+    my $data = App::Goto::Dir::Config::Default::get;
 }
 
-sub save {
-    $loaded = shift if ref $_[0] eq 'HASH';
-    YAML::DumpFile( $file, $loaded );
+sub save { YAML::DumpFile( $file_name, $data ) }
+
+sub get {
+    my (@keys) = @_;
+    my $ret = $data;
+    for my $k (@keys){
+        return unless exists $ret->{ $k };
+        $ret = $ret->{ $k };
+    }
+    return $ret;
+}
+
+sub set {
+    my ($value, @keys) = @_;
+    my $d = $data;
+    return unless @keys;
+    my $last_key = pop @keys;
+    for my $k (@keys){
+        return unless exists $d->{ $k };
+        $d = $d->{ $k };
+    }
+    return unless exists $d->{ $last_key } and ref $value eq ref $d->{ $last_key };
+    $d->{ $last_key } = $value;
 }
 
 1;
