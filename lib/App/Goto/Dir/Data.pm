@@ -29,7 +29,7 @@ sub new {
                                 overwrite_names => 0,
                                 name_length_max => 6, },
                      list => { default_insert_position => -1,
-                               start_with => '*current',
+                                start_app_with => '*current',
                          },
                 } };
     $self->{'list'}{$_} = App::Goto::Dir::Data::List->new($_, $special_list{$_}, 1, []) for keys %special_list;

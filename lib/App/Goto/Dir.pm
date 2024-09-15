@@ -7,7 +7,6 @@ use YAML;
 use App::Goto::Dir::Command;
 use App::Goto::Dir::Config;
 use App::Goto::Dir::Data;
-use App::Goto::Dir::Format;
 use App::Goto::Dir::Help;
 use App::Goto::Dir::Parse;
 

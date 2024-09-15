@@ -1,6 +1,8 @@
 use v5.18;
 use warnings;
 
+# list entry data access
+
 use App::Goto::Dir::Data::ValueType::Directory;
 use App::Goto::Dir::Data::ValueType::Position;
 use App::Goto::Dir::Data::ValueType::TimeStamp;
@@ -10,7 +12,7 @@ package App::Goto::Dir::Data::Entry;
 #### constructors + serialisation ######################################
 
 sub new {
-    my ($pkg, $dir_str, $name_str) = @_;
+    my ($pkg, $dir_str, $name_str, $description) = @_;
     my $dir = App::Goto::Dir::Data::ValueType::Directory->new( $dir_str );
     return unless ref $dir;  # only existing directories allowed
 

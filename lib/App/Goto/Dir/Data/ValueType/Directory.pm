@@ -8,7 +8,7 @@ package App::Goto::Dir::Data::ValueType::Directory;
 
 sub new     {
     my ($pkg, $dir_str) = @_;
-    return unless _is_dir( $dir_str );
+    return unless is_dir( $dir_str );
     $dir_str = normalize_dir( $dir_str );
     bless { value => $dir_str };
 }
@@ -20,12 +20,12 @@ sub state   { $_[0]->value }
 #### accessors #########################################################
 
 sub get     { $_[0]->value }
-sub set     { $_[0]->{'value'} = normalize_dir( $_[1] ) if _is_dir( $_[1] ) }
+sub set     { $_[0]->{'value'} = normalize_dir( $_[1] ) if is_dir( $_[1] ) }
 sub value   { $_[0]->{'value'} }
 
 #### predicates ########################################################
 
-sub is_alive { -d _expand_home_dir($_[0]->value) }
+sub is_alive { -d expand_home_dir($_[0]->value) }
 sub is_equal {
     my ($self, $dir_str) = @_;
     return 0 unless defined $dir_str;
@@ -37,20 +37,20 @@ sub is_equal {
 sub format {
     my $self = shift;
     my $full_dir = shift // 0; #
-    $full_dir ? _expand_home_dir($self->value) : $self->value;
+    $full_dir ? expand_home_dir($self->value) : $self->value;
 }
 
 ##### helper ###########################################################
 
-sub _is_dir {defined $_[0] and $_[0] and -d _expand_home_dir($_[0]) }
+sub is_dir {defined $_[0] and $_[0] and -d expand_home_dir($_[0]) }
 
-sub _expand_home_dir  {
+sub expand_home_dir  {
     my $dir = shift;
     return unless defined $dir;
     return $dir unless substr($dir, 0, 1) eq '~';
     File::Spec->catdir( $ENV{'HOME'}, substr($dir, 1) );
 }
-sub _compact_home_dir {
+sub compact_home_dir {
     my $dir = shift;
     return unless defined $dir;
     return $dir unless index($dir, $ENV{'HOME'}) == 0;
@@ -61,10 +61,10 @@ sub _compact_home_dir {
 sub normalize_dir {
     my $dir = shift;
     return unless defined $dir;
-    $dir = _expand_home_dir( $dir );
+    $dir = expand_home_dir( $dir );
     $dir = File::Spec->rel2abs( $dir );
     $dir = File::Spec->canonpath( $dir );
-    _compact_home_dir( $dir );
+    compact_home_dir( $dir );
 }
 
 #### end ###############################################################

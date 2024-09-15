@@ -20,16 +20,12 @@ sub clone   { $_[0]->restate( $_[0]->state ) }
 
 #### accessors #########################################################
 
-sub list_names {
-    my $self = shift;
-    keys %$self
-}
-
-sub get {
+sub get { #     ~list_name   -->   +pos|0
     my ($self, $list_name) = @_;
     $self->is_in_list($list_name) ? $self->{ $list_name } : 0;
 }
-sub set {
+
+sub set { #     ~list_name, +pos   -->   +
     my ($self, $list_name, $pos) = @_;
     return unless $self->is_in_list( $list_name ) and defined $pos and $pos;
     $self->{$list_name} = int $pos;
@@ -46,17 +42,15 @@ sub remove_list {
     delete $self->{$list_name};
 }
 
+sub list_names {
+    my $self = shift;
+    keys %$self
+}
+
 #### predicates ########################################################
 
 sub is_in_list { (defined $_[1] and exists $_[0]->{ $_[1] }) ? 1 : 0 }
 
-#### display ###########################################################
-
-sub format {
-    my $self = shift;    #
-}
-
-##### helper ###########################################################
 #### end ###############################################################
 
 1;
