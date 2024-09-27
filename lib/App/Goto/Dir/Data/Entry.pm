@@ -52,7 +52,7 @@ sub is_expired    { ( ! $_[0]->{'deleted'}->is_empty and defined $_[1]
 sub delete        { $_[0]->{'deleted'}->is_empty ? $_[0]->{'deleted'}->update : 0}
 sub undelete      { $_[0]->{'deleted'}->clear                                  }
 
-#### accessors #########################################################
+#### accessors of displayed values #############################################
 
 sub dir           { $_[0]->{'dir'}->format( $_[1] ) }
 sub is_broken     {!$_[0]->{'dir'}->is_alive }
@@ -65,43 +65,41 @@ sub rename        { $_[0]->{'name'}   = $_[1]   }
 sub edit          { $_[0]->{'script'} = $_[1]   }
 sub notate        { $_[0]->{'note'}   = $_[1]   }
 
-my $property_call = { age    => sub { $_[0]->age  },
-                      dir    => sub { $_[0]->dir   },
-                      name   => sub { $_[0]->name   },
-                      script => sub { $_[0]->script },
-                      note   => sub { $_[0]->note   },
-                      visits => sub { $_[0]->visits },
-                  last_visit => sub { $_[0]->last_visit },
-};
-my $num_property = { age    => 1,
-                     dir    => 0,
-                     name   => 0,
-                     script => 0,
-                     note   => 0,
-                     visits => 1,
-                 last_visit => 1,
-};
-
-sub get {
-    my ($self, $property) = @_;
-    $property_call->{ $property }->( $self ) if is_property( $property );
-}
-sub property_equals {
-    my ($self, $property, $value) = @_;
-    return 0 unless exists $property_call->{ $property } and defined $value;
-    return $self->{'dir'}->is_equal( $value ) if $property eq 'dir';
-    return $self->{$property} == $value if $num_property->{$property};
-    $self->{$property} eq $value ? 1 : 0;
-}
-sub is_property {
-    my ($property) = @_;
-    (defined $property and exists $property_call->{ $property }) ? 1 : 0;
-}
-
 sub list_pos      { $_[0]->{'list_pos'} }
 sub is_in_list    { $_[0]->{'list_pos'}->is_in_list( $_[1] ) }
 
-##### helper ###########################################################
+#### universal accessor ########################################################
+
+my $cmp_value = { age    => sub { $_[0]->{'created'}->get()  },
+              last_visit => sub { $_[0]->{'visited'}->get() },
+                  dir    => sub { $_[0]->dir(1) }, # compare full dirs
+                  name   => sub { $_[0]->name   },
+                  script => sub { $_[0]->script },
+                  note   => sub { $_[0]->note   },
+                  visits => sub { $_[0]->visits },
+};
+my $property_is_numeric = { age  => 1,       last_visit => 1,
+                           dir   => 0,           visits => 1,
+                           name  => 0,           script => 0,
+                           note  => 0,
+};
+
+sub is_property {
+    my ($property) = @_;
+    (defined $property and exists $cmp_value->{ $property }) ? 1 : 0;
+}
+sub get {
+    my ($self, $property) = @_;
+    $cmp_value->{ $property }->( $self ) if is_property( $property );
+}
+sub cmp {
+    my ($self, $property, $cell) = @_;
+    return unless is_property( $property ) and ref $cell eq __PACKAGE__;
+    $property_is_numeric->( $property )
+      ? ($self->get( $property ) <=> $cell->get( $property ))
+      : ($self->get( $property ) cmp $cell->get( $property ));
+}
+
 #### end ###############################################################
 
 1;

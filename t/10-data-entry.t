@@ -37,10 +37,11 @@ is( $obj->get('script'),   'bang();','entry script retrieved via universal gette
 
 my ($drive, $dir) = File::Spec->splitpath( __FILE__ );
 my $adir = App::Goto::Dir::Data::ValueType::Directory::normalize_dir( $dir );
+my $edir = App::Goto::Dir::Data::ValueType::Directory::expand_home_dir( $edir );
 
 is( $obj->redirect($adir),    $adir, 'could change directory of entry');
 is( $obj->dir,                $adir, 'entry has now a different directory');
-is( $obj->get('dir'),         $adir, 'entry dir retrieved via universal getter');
+is( $obj->get('dir'),         $ldir, 'entry dir retrieved via universal getter');
 is( $obj->delete() > 1,           1, 'could delete entry, since it was not deleted yet');
 is( $obj->delete(),               0, 'could delete entry only once');
 is( $obj->undelete() ,            0, 'reversed deletion of entry');
