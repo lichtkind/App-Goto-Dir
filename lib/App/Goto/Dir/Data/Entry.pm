@@ -17,7 +17,7 @@ sub new {
     return unless ref $dir;  # only existing directories allowed
 
     bless { dir => $dir,
-            name  => $name_str // '', script => '',  note => '',
+            name  => $name_str // '', note => '',  script => '',  report => '',
             list_pos => App::Goto::Dir::Data::ValueType::Position->new(),
             created  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 1 ),
             deleted  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
@@ -30,7 +30,7 @@ sub restate { bless $_[1] if ref $_[1] eq 'HASH' }
 sub state   {
     my ($self, $state) = (shift, {});
     $state->{ $_ } = $self->{ $_ }->state for qw/dir created deleted visited listpos/;
-    $state->{ $_ } = $self->{ $_ }        for qw/script note visits/;
+    $state->{ $_ } = $self->{ $_ }        for qw/script report note visits/;
     $state;
 }
 
