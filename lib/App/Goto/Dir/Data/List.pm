@@ -1,6 +1,5 @@
 use v5.18;
 use warnings;
-
 use App::Goto::Dir::Data::Entry;
 
 package App::Goto::Dir::Data::List;   # index: 1 .. count
@@ -19,14 +18,25 @@ sub new {
     $self;
 }
 
-#### accessors #########################################################
+sub destroy {
+    my ($self) = @_;
+    $self->{'entry'}[$_-1]->list_pos->remove_list( $self->name ) for 1 .. $self->entry_count;
+    my $c = $self->entry_count;
+    $self->{'entry'} = [];
+    $c;
+}
+
+#### list accessors #########################################################
 sub name            { $_[0]->{'name'} }
-sub set_name        { $_[0]->{'name'} = $_[1] if defined $_[1] and $_[1] }
+sub rename          {
+  $_[0]->{'name'} = $_[1] if defined $_[1] and $_[1]
+  # rename in elements
+}
 sub description     { $_[0]->{'description'} }
 sub set_description { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
 sub is_special      { $_[0]->{'special'} ? 1 : 0}
 
-#### entry API #########################################################
+#### entry API #################################################################
 sub is_entry        { (ref $_[1] eq 'App::Goto::Dir::Data::Entry') ? 1 : 0 }
 sub has_entry       { ($_[0]->is_entry( $_[1] ) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
 sub all_entries     { @{$_[0]->{'entry'}} }
@@ -64,6 +74,7 @@ sub get_entry_by_property {
     @entries == 1 ? $entries[0] : @entries;
 }
 
+
 sub insert_entry {
     my ($self, $entry, $pos) = @_;
     return unless $self->is_entry( $entry);
@@ -89,15 +100,8 @@ sub remove_entry {
     $entry;
 }
 
-sub empty_list {
-    my ($self) = @_;
-    $self->{'entry'}[$_-1]->list_pos->remove_list( $self->name ) for 1 .. $self->entry_count;
-    my $c = $self->entry_count;
-    $self->{'entry'} = [];
-    $c;
-}
 
-sub report {
+sub conent {
     my ($self, $sort_order, $reverse, $columns) = @_;
     my $report = ' - entries of list '.$self->name." :\n";
     my @order = 1 .. $self->entry_count;

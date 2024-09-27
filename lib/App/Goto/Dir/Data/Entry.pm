@@ -10,7 +10,6 @@ use App::Goto::Dir::Data::ValueType::TimeStamp;
 package App::Goto::Dir::Data::Entry;
 
 #### constructors + serialisation ######################################
-
 sub new {
     my ($pkg, $dir_str, $name_str, $description) = @_;
     my $dir = App::Goto::Dir::Data::ValueType::Directory->new( $dir_str );
@@ -35,7 +34,6 @@ sub state   {
 }
 
 #### time stamps #######################################################
-
 sub age           { $_[0]->{'created'}->age_in_days }
 
 sub visits        { $_[0]->{'visits'} }
@@ -53,7 +51,6 @@ sub delete        { $_[0]->{'deleted'}->is_empty ? $_[0]->{'deleted'}->update : 
 sub undelete      { $_[0]->{'deleted'}->clear                                  }
 
 #### accessors of displayed values #############################################
-
 sub dir           { $_[0]->{'dir'}->format( $_[1] ) }
 sub is_broken     {!$_[0]->{'dir'}->is_alive }
 sub name          { $_[0]->{'name'} }
@@ -69,7 +66,6 @@ sub list_pos      { $_[0]->{'list_pos'} }
 sub is_in_list    { $_[0]->{'list_pos'}->is_in_list( $_[1] ) }
 
 #### universal accessor ########################################################
-
 my $cmp_value = { age    => sub { $_[0]->{'created'}->get()  },
               last_visit => sub { $_[0]->{'visited'}->get() },
                   dir    => sub { $_[0]->dir(1) }, # compare full dirs
@@ -101,5 +97,4 @@ sub cmp {
 }
 
 #### end ###############################################################
-
 1;
