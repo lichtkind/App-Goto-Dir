@@ -11,14 +11,14 @@ package App::Goto::Dir::Data::Entry;
 
 #### constructors + serialisation ######################################
 sub new {
-    my ($pkg, $dir_str, $name_str, $description) = @_;
+    my ($pkg, $dir_str, $name, $description) = @_;
     my $dir = App::Goto::Dir::Data::ValueType::Directory->new( $dir_str );
-    return unless ref $dir;  # only existing directories allowed
+    return 'only existing directories allowed as first argument' unless ref $dir;
 
     bless { dir => $dir,
-            name  => $name_str // '', note => '',  script => '',  report => '',
+            name  => $name // '', note => '',  script => '',  report => '', # onle name in use for now
             list_pos => App::Goto::Dir::Data::ValueType::Position->new(),
-            created  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 1 ),
+            created  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 1 ), # now = true
             deleted  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
             visited  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
             visits   => 0,
@@ -34,17 +34,16 @@ sub state   {
 }
 
 #### time stamps #######################################################
-sub age           { $_[0]->{'created'}->age_in_days }
-
-sub visits        { $_[0]->{'visits'} }
+sub age              { $_[0]->{'created'}->age_in_days }
 sub days_not_visited { $_[0]->{'visited'}->is_empty ? -1 : $_[0]->{'visited'}->age_in_days } # -1 == never
+sub visits           { $_[0]->{'visits'} }
 sub visit_dir  {
     my ($self) = @_;
     $self->{'visited'}->update;
     ++$self->{'visits'};
 }
 
-# deleted date is more days ago than given number
+# deleted more days ago than given number (arg 1)
 sub is_expired    { ( ! $_[0]->{'deleted'}->is_empty and defined $_[1]
                      and $_[0]->{'deleted'}->age_in_days > $_[1] )     ? 1 : 0 }
 sub delete        { $_[0]->{'deleted'}->is_empty ? $_[0]->{'deleted'}->update : 0}
@@ -59,7 +58,7 @@ sub note          { $_[0]->{'note'} }
 
 sub redirect      { $_[0]->{'dir'}->set( $_[1] ) }
 sub rename        { $_[0]->{'name'}   = $_[1]   }
-sub edit          { $_[0]->{'script'} = $_[1]   }
+sub rescript      { $_[0]->{'script'} = $_[1]   }
 sub notate        { $_[0]->{'note'}   = $_[1]   }
 
 sub list_pos      { $_[0]->{'list_pos'} }
@@ -84,16 +83,16 @@ sub is_property {
     my ($property) = @_;
     (defined $property and exists $cmp_value->{ $property }) ? 1 : 0;
 }
-sub get {
+sub get_property  {
     my ($self, $property) = @_;
     $cmp_value->{ $property }->( $self ) if is_property( $property );
 }
-sub cmp {
+sub cmp_property {
     my ($self, $property, $cell) = @_;
     return unless is_property( $property ) and ref $cell eq __PACKAGE__;
     $property_is_numeric->( $property )
-      ? ($self->get( $property ) <=> $cell->get( $property ))
-      : ($self->get( $property ) cmp $cell->get( $property ));
+      ? ($self->get_property( $property ) <=> $cell->get_property( $property ))
+      : ($self->get_property( $property ) cmp $cell->get_property( $property ));
 }
 
 #### end ###############################################################

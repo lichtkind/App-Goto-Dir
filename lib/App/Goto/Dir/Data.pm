@@ -8,7 +8,7 @@ package App::Goto::Dir::Data;
 my %special_list = (   new => 'recently created directory entries',
                        bin => 'deleted but not yet discarded entries',
                        all => 'all entries, even the deleted',
-                    # stay => 'all not deleted entries',
+                      stay => 'all not deleted entries',
                        now => 'recently visited entries, without deleted',
                      named => 'entries with name, without deleted',
                     broken => 'entries with not existing directories, not deleted',);
@@ -69,11 +69,7 @@ sub state {
 sub get_config  { $_[0]->{'config'} }
 sub set_config  { $_[0]->{'config'} = $_[1] if ref $_[1] eq 'HASH' }
 
-#### list API ###########################################################
-sub list_exists  { (defined $_[1] and exists $_[0]->{'list'}{$_[1]}) ? 1 : 0 }  # ~name --> ?
-sub is_list_special { (defined $_[1] and exists $special_list{$_[1]}) ? 1 : 0 } # ~name --> ?
-sub get_list     { $_[0]->{'list'}{$_[1]} if list_exists($_[1]) }               # ~name --> .list
-sub get_list_or_current { $_[0]->get_list($_[1]) // $_[0]->get_current_list}    # ~name --> .list
+#### list API ##################################################################
 sub new_list {
     my ($self, $list_name, $description, @elems) = @_;
     return 'need a name for the list to create' unless defined $list_name and $list_name;
@@ -92,9 +88,12 @@ sub remove_list  {
     $self->{'list'}{ $list_name }->empty_list;
     delete $self->{'list'}{ $list_name };
 }
-
+sub list_exists  { (defined $_[1] and exists $_[0]->{'list'}{$_[1]}) ? 1 : 0 }  # ~name --> ?
+sub get_list     { $_[0]->{'list'}{$_[1]} if list_exists($_[1]) }               # ~name --> .list
+sub get_list_or_current { $_[0]->get_list($_[1]) // $_[0]->get_current_list}    # ~name --> .list
 sub get_current_list      { $_[0]->{'list'}{ $_[0]->{'current_list'} }   }     # --> .list
 sub set_current_list      { $_[0]->{'current_list'} = $_[1] if $_[0]->list_exists( $_[1] ) } # .list --> .list
+
 sub report                { # listing of all lists                               --> ~report
     my ($self, $order) = @_;
     my $report = " - listing of all lists (name, members, special, description) :\n";

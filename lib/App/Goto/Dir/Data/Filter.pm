@@ -2,19 +2,15 @@ use v5.18;
 use warnings;
 use App::Goto::Dir::Data::Entry;
 
-package App::Goto::Dir::Data::List;   # index: 1 .. count
+package App::Goto::Dir::Data::Filter;   # index: 1 .. count
 
 #### constructor, object life cycle ############################################
 sub new {
-    my ($pkg, $name, $description, $entries, $filter) = @_;
-    return unless ref $entries eq 'ARRAY' and defined $name;
-    my @e = sort { $a->list_pos->get($name) <=> $b->list_pos->get($name) }
-            grep { $_->list_pos->get($name)}
-            grep { is_entry( undef, $_ )  } @$entries;
-            ref eq 'App::Goto::Dir::Data::Filter'
+    my ($pkg, $name, $description, $special) = @_;
+    return unless defined $name and $name;
 
     my $self = bless { name => $name, description => $description // '',
-                       entry => \@e, filter => \@f };
+                       special => $special // 0,};
     $self->_refresh_list_pos;
     $self;
 }

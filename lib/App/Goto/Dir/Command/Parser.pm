@@ -2,7 +2,7 @@ use v5.18;
 use warnings;
 use File::Spec;
 
-package App::Goto::Dir::Command::Parse;
+package App::Goto::Dir::Command::Parser;
 
 my ($config, $data);
 my %command_tr = ( 'del' => 'delete',
