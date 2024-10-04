@@ -1,5 +1,5 @@
 
-    ─── Summary ├──────────────────────────────────────────────
+  ┌───┤ Summary ├──────────────────────────────────────────────┐
   │ App::Goto::Dir a.k.a. gt is an small command line tool,    │
   │ to change the current working directory of the shell       │
   │ directly into project directories (long distance cd).      │
@@ -8,7 +8,7 @@
   │ When jumping into the the target directory,                │
   │ an arbitrary command might be run and/or text note         │
   │ might be displayed.                                        │
-  └────────────────────────────────────────────────────────────˩
+  └────────────────────────────────────────────────────────────┘
 
 ── App
     └── Goto
@@ -23,6 +23,6 @@
             │   ├── List.pm            # integrity of list positions, list output
             │   └── ValueType
             │       ├── Directory.pm   # object holding the directory value
-            │       ├── Position.pm    # object holding the positions in all lists
+            │       ├── Relation.pm    # object holding the positions in all lists
             │       └── TimeStamp.pm   # object holding one time information
             └── Help.pm                # help texts for different arguments

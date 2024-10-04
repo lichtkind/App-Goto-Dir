@@ -6,13 +6,11 @@ package App::Goto::Dir::Data::Filter;   # index: 1 .. count
 
 #### constructor, object life cycle ############################################
 sub new {
-    my ($pkg, $name, $description, $special) = @_;
-    return unless defined $name and $name;
-
-    my $self = bless { name => $name, description => $description // '',
-                       special => $special // 0,};
-    $self->_refresh_list_pos;
-    $self;
+    my ($pkg, $name, $description, $code) = @_;
+    return unless defined $code and $name and $description and $code;
+# check is_property
+# check eval
+    bless { name => $name, description => $description, code => $code, ref => $ref};
 }
 
 sub restate {
@@ -20,13 +18,7 @@ sub restate {
     App::Goto::Dir::Data::List->new( $state->{'name'}, $state->{'description'}, $state->{'special'}, $entries);
 }
 sub state   {
-    return {name => $_[0]->{'name'}, description => $_[0]->{'description'}, special => $_[0]->{'special'}, };
-}
-sub destroy {
-    my ($self) = @_;
-    return 0 if $self->is_special; # user can not remove special lists
-    $_->list_pos->remove_list( $self->name ) for $self->all_entries;
-    return 1;                      # object can be discarded by holder
+    return {name => $_[0]->{'name'}, description => $_[0]->{'description'}, code => $_[0]->{'code'}, };
 }
 
 #### list accessors ############################################################
