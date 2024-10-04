@@ -4,7 +4,7 @@ use warnings;
 # list entry data access
 
 use App::Goto::Dir::Data::ValueType::Directory;
-use App::Goto::Dir::Data::ValueType::Position;
+use App::Goto::Dir::Data::ValueType::Relation;
 use App::Goto::Dir::Data::ValueType::TimeStamp;
 
 package App::Goto::Dir::Data::Entry;
@@ -17,7 +17,7 @@ sub new {
 
     bless { dir => $dir,
             name  => $name // '', note => '',  script => '',  report => '', # onle name in use for now
-            list_pos => App::Goto::Dir::Data::ValueType::Position->new(),
+            list_pos => App::Goto::Dir::Data::ValueType::Relation->new(),
             created  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 1 ), # now = true
             deleted  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
             visited  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
@@ -62,7 +62,7 @@ sub rescript      { $_[0]->{'script'} = $_[1]   }
 sub notate        { $_[0]->{'note'}   = $_[1]   }
 
 sub list_pos      { $_[0]->{'list_pos'} }
-sub is_in_list    { $_[0]->{'list_pos'}->is_in_list( $_[1] ) }
+sub is_in_list    { $_[0]->{'list_pos'}->is_in_set( $_[1] ) }
 
 #### universal accessor ########################################################
 my $cmp_value = { age    => sub { $_[0]->{'created'}->get()  },
