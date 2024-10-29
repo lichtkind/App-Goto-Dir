@@ -1,0 +1,22 @@
+
+--add  -a [~path] [.list]
+
+--move -m [[list#]pos|name] [list#]pos|name
+
+--copy -c [[list#]pos|name] [list#]pos|name
+
+--del[ete] -d               [list#]pos|name
+--undel[ete] -u                    pos|name
+
+
+--list -l                                       list all lists, filter and sorting orders
+--list -l name                                  set name of currently displayed list
+
+--filter -f name:i|e|m                          set state of named filter:
+                                                m = mute
+                                                e = exclude
+                                                i = include
+
+
+--order -o                                      list all sorting orders
+--order -o[:name[:r[everse]]]                   display now list sorted by (reverse)
