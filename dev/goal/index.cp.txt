@@ -10,19 +10,5 @@
   │ might be displayed.                                        │
   └────────────────────────────────────────────────────────────┘
 
-── App
-     └── Goto
-          ├── Dir.pm                # main class, starter routine, eval loop
-          ├── Command.pm            # exec commands
-          │     └── Parser.pm         # validate strings into commands
-          ├── Config.pm             # load store all configs
-          │     └── Default.pm        # inline default configs
-          ├── Data.pm               # load, store, manage all entries, lists, current list name
-          │     ├── Entry.pm          # dir, all list pos, other data attached
-          │     ├── Filter.pm         # list filter, hide entries with certain properties
-          │     ├── List.pm           # integrity of list positions, list output
-          │     └── ValueType
-          │           ├── Directory.pm   # object holding the directory value
-          │           ├── Relation.pm    # object holding the positions in all lists
-          │           └── TimeStamp.pm   # object holding one time information
-          └── Help.pm               # help texts for different arguments
+- modules.txt
+- commands.txt

@@ -1,0 +1,18 @@
+ Module / Directorystructure
+
+── App
+     └── Goto
+           └─── Dir.pm                   # main class, starter routine, eval loop
+                   ├── Command.pm            # exec user CLI commands
+                   │     └── Parser.pm         # validate user input strings into commands
+                   ├── Config.pm             # load, store, access app configs
+                   │     └── Default.pm        # inline default configs
+                   ├── Data.pm               # load, store, manage all dir entries in lists
+                   │     ├── Entry.pm          # storage cell for one directory and correlated data
+                   │     ├── Filter.pm         # list filter which hides or permits entries with defined properties
+                   │     ├── List.pm           # list of dir entries, handles their positions
+                   │     └── ValueType
+                   │           ├── Directory.pm   # directory value and its formatting
+                   │           ├── Relation.pm    # state of a relations between a list and and an entry or filter
+                   │           └── TimeStamp.pm   # one, time information, calculation, formatting
+                   └── Help.pm               # user help texts

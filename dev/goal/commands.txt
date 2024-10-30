@@ -1,4 +1,7 @@
 
+. go again to previously selected dir
+- go back to
+
 --add  -a [~path] [.list]
 
 --move -m [[list#]pos|name] [list#]pos|name
