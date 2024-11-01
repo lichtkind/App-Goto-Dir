@@ -5,4 +5,12 @@ use warnings;
 
 package App::Goto::Dir::Config;
 
+sub load {
+    $default = App::Goto::Dir::Config::Default::get();
+}
+
+sub store {}
+
+sub write_destination {}
+
 1;

@@ -10,5 +10,6 @@
   │ might be displayed.                                        │
   └────────────────────────────────────────────────────────────┘
 
-- modules.txt
-- commands.txt
+- commands.txt -- user API
+- config.txt   -- app config hash
+- modules.txt  -- file struture  of libraries
