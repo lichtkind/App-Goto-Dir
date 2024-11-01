@@ -2,7 +2,7 @@
 # load, store, manage all dir entries in lists with filters
 
 package App::Goto::Dir::Data;
-use v5.18;
+use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
 use App::Goto::Dir::Data::Filter;

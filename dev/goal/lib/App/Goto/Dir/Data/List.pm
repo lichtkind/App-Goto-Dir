@@ -2,7 +2,7 @@
 # list of dir entries, handles their positions
 
 package App::Goto::Dir::Data::List;
-use v5.18;
+use v5.20;
 use warnings;
 use App::Goto::Dir::Data::ValueType::Relations;
 use App::Goto::Dir::Data::Entry;

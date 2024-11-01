@@ -7,7 +7,7 @@ use warnings;
 use App::Goto::Dir::Config::Default;
 
 sub load {
-    $default = App::Goto::Dir::Config::Default::get();
+    my $default = App::Goto::Dir::Config::Default::get();
 }
 
 sub store {}

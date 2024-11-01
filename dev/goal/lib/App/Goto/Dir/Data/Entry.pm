@@ -2,7 +2,7 @@
 # storage cell for one directory and correlated data
 
 package App::Goto::Dir::Data::Entry;
-use v5.18;
+use v5.20;
 use warnings;
 use App::Goto::Dir::Data::ValueType::Directory;
 use App::Goto::Dir::Data::ValueType::Relations;
