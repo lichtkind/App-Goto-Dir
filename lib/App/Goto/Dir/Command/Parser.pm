@@ -1,10 +1,10 @@
-use v5.18;
-use warnings;
-use File::Spec;
 
 # validate user input strings into commands
 
 package App::Goto::Dir::Command::Parser;
+use v5.18;
+use warnings;
+use File::Spec;
 
 my ($config, $data);
 my %command_tr = ( 'del' => 'delete',

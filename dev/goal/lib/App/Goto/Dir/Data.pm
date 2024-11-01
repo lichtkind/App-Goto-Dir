@@ -4,6 +4,9 @@
 package App::Goto::Dir::Data;
 use v5.18;
 use warnings;
+use App::Goto::Dir::Data::Entry;
+use App::Goto::Dir::Data::Filter;
+use App::Goto::Dir::Data::List;
 
 sub new { }   # %data, %config --> .
 sub state {}  #                --> %data

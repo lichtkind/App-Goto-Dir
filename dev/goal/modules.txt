@@ -9,7 +9,7 @@
                    │     └── Default.pm        # inline default configs
                    ├── Data.pm               # load, store, manage all dir entries in lists with filters
                    │     ├── Entry.pm          # storage cell for one directory and correlated data
-                   │     ├── Filter.pm         # list filter which hides or permits entries with defined properties
+                   │     ├── Filter.pm         # entry list filter which may hides entries with defined properties
                    │     ├── List.pm           # list of dir entries, handles their positions
                    │     └── ValueType
                    │           ├── Directory.pm   # directory value store  and its formatting

@@ -1,11 +1,13 @@
-use v5.18;
-use warnings;
 
 # load, store, manage all dir entries in lists with filters
 
-use App::Goto::Dir::Data::List;
 
 package App::Goto::Dir::Data;
+use v5.18;
+use warnings;
+use App::Goto::Dir::Data::Entry;
+use App::Goto::Dir::Data::Filter;
+use App::Goto::Dir::Data::List;
 
 my %special_list = (   new => 'recently created directory entries',
                        bin => 'deleted but not yet discarded entries',

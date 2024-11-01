@@ -1,8 +1,10 @@
+
+# entry list filter which may hides entries with defined properties
+
+package App::Goto::Dir::Data::Filter;   # index: 1 .. count
 use v5.18;
 use warnings;
 use App::Goto::Dir::Data::Entry;
-
-package App::Goto::Dir::Data::Filter;   # index: 1 .. count
 
 #### constructor, object life cycle ############################################
 sub new {

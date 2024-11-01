@@ -4,6 +4,7 @@
 package App::Goto::Dir::Data::List;
 use v5.18;
 use warnings;
+use App::Goto::Dir::Data::ValueType::Relations;
 use App::Goto::Dir::Data::Entry;
 
 sub new { }               # @.entry, ~name -- ~decription  --> .
