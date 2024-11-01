@@ -1,10 +1,10 @@
 use v5.18;
 use warnings;
 
-# list entry data access
+# storage cell for one directory and correlated data
 
 use App::Goto::Dir::Data::ValueType::Directory;
-use App::Goto::Dir::Data::ValueType::Relation;
+use App::Goto::Dir::Data::ValueType::Relations;
 use App::Goto::Dir::Data::ValueType::TimeStamp;
 
 package App::Goto::Dir::Data::Entry;
@@ -17,7 +17,7 @@ sub new {
 
     bless { dir => $dir,
             name  => $name // '', note => '',  script => '',  report => '', # onle name in use for now
-            list_pos => App::Goto::Dir::Data::ValueType::Relation->new(),
+            list_pos => App::Goto::Dir::Data::ValueType::Relations->new(),
             created  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 1 ), # now = true
             deleted  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),
             visited  => App::Goto::Dir::Data::ValueType::TimeStamp->new( 0 ),

@@ -1,7 +1,9 @@
+
+# state of a relations between an object and a list of objects
+
+package App::Goto::Dir::Data::ValueType::Relations;
 use v5.18;
 use warnings;
-
-package App::Goto::Dir::Data::ValueType::Relation;
 
 #### de- constructors ##################################################
 

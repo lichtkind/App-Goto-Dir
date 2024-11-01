@@ -1,6 +1,8 @@
 use v5.18;
 use warnings;
 
+# load, store, manage all dir entries in lists with filters
+
 use App::Goto::Dir::Data::List;
 
 package App::Goto::Dir::Data;

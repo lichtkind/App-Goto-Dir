@@ -2,6 +2,8 @@ use v5.18;
 use warnings;
 use File::Spec;
 
+# directory value store and its formatting
+
 package App::Goto::Dir::Data::ValueType::Directory;
 
 #### de- constructors ##################################################

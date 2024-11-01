@@ -2,6 +2,8 @@ use v5.18;
 use warnings;
 use App::Goto::Dir::Data::Entry;
 
+# list of dir entries, handles their positions
+
 package App::Goto::Dir::Data::List;   # index: 1 .. count
 
 #### constructor, object life cycle ############################################

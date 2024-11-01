@@ -2,6 +2,8 @@ use v5.18;
 use warnings;
 use File::Spec;
 
+# validate user input strings into commands
+
 package App::Goto::Dir::Command::Parser;
 
 my ($config, $data);

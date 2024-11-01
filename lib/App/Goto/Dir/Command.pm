@@ -4,6 +4,8 @@ no warnings  qw/experimental::smartmatch/;
 use feature qw/switch/;
 use File::Spec;
 
+# exec user CLI commands
+
 package App::Goto::Dir::Command;
 
 my         ($config, $data, $cwd);

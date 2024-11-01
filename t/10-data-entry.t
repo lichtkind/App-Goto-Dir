@@ -24,7 +24,7 @@ is( $obj->visits,              1,    'entry was visited once');
 is( $obj->days_not_visited,    0,    'last visit was just now');
 is( $obj->visit_dir,           2,    'visit entry again');
 is( $obj->visits,              2,    'entry count still consistent');
-is( ref $obj->list_pos, 'App::Goto::Dir::Data::ValueType::Relation',  'got access to list position object');
+is( ref $obj->list_pos, 'App::Goto::Dir::Data::ValueType::Relations',  'got access to list position object');
 is( $obj->rename('home'),  'home',   'could rename entry');
 is( $obj->name,            'home',   'entry name retrieved');
 is( $obj->get_property('name'),     'home',   'entry name retrieved via universal getter');
