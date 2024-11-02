@@ -25,7 +25,7 @@ sub restate {
 }
 sub state   { return {name => $_[0]->{'name'}, description => $_[0]->{'description'}, code => $_[0]->{'code'}, } }
 
-#### list accessors ############################################################
+#### attribute accessors ###############################################
 sub name            { $_[0]->{'name'} }
 sub rename          { $_[0]->{'name'} = $_[1] if defined $_[1] and $_[1] }
 sub description     { $_[0]->{'description'} }
@@ -43,5 +43,9 @@ sub report {
     return substr( $self->{'name'}.': '.$self->{'description'}, 0, $width);
 }
 #### end ###############################################################
+
+
+sub new {}  # ~code, ~filter_name -- ~filter_descrip. --> .filter
+sub pass {} # .entry
 
 1;
