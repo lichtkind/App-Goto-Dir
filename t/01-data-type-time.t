@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 32;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 my $class = 'App::Goto::Dir::Data::ValueType::TimeStamp';
@@ -39,11 +39,19 @@ is( $obj->format(1),      '01.01.1970  01:00:00', 'correct time string, with tim
 is( $obj->format(1,1),    '1970.01.01  01:00:00', 'correct time string, with time, sortable order');
 
 $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(1);
-is( $obj->is_empty,      0, 'created none empty time stamp');
+is( $obj->is_empty,       0, 'created none empty time stamp');
+is( ($obj->update > 0),   1, 'renewed timestamp');
+is( $obj->is_empty,       0, 'still not empty');
+is( ($obj->clear > 0),    1, 'emptied timestamp');
+is( $obj->is_empty,       1, 'stamp is now empty');
+
 $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(0);
-is( $obj->is_empty,      1, 'created explicitly empty time stamp');
-$obj->update;
-is( $obj->is_empty,      0, 'time stamp was created via update');
+is( $obj->is_empty,       1, 'created explicitly empty time stamp');
+is( ($obj->set(1) > 0),   1, 'updated timestamp via set');
+is( $obj->is_empty,       0, 'stamp has value now');
+is( ($obj->set(0) > 0),   1, 'deleted timestamp via set');
+is( $obj->is_empty,       1, 'stamp has again no value');
+
 my $state = $obj->state;
 is( $obj->get,      $state, 'could retrieve inner state');
 my $nobj = App::Goto::Dir::Data::ValueType::TimeStamp->restate($state);
