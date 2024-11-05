@@ -19,7 +19,7 @@ sub set     { (defined $_[1] and $_[1]) ? $_[0]->update : $_[0]->clear }
 
 sub value   { $_[0]->{'value'} }
 sub update  { $_[0]->{'value'} = _now() }
-sub clear   { $_[0]->{'value'} = 0 }
+sub clear   { my $temp = $_[0]->{'value'}; $_[0]->{'value'} = 0; return $temp }
 
 #### predicates ########################################################
 
