@@ -35,7 +35,7 @@ sub state   {
 
 #### accessors of displayed values #############################################
 sub dir           { $_[0]->{'dir'}->format( $_[1] ) }
-sub is_broken     {!$_[0]->{'dir'}->is_alive }
+sub is_broken     { $_[0]->{'dir'}->is_alive ? 0 : 1}
 sub name          { $_[0]->{'name'} }
 sub description   { $_[0]->{'description'} }
 sub script        { $_[0]->{'script'} }

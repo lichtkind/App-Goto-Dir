@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.20;
 use warnings;
-use Test::More tests => 53;
+use Test::More tests => 55;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
@@ -18,6 +18,7 @@ is( $entry->get_property('visits'), 0, 'get visits count from universal getter')
 is( $entry->days_not_visited,   -1,    'not last visit time stamp');
 is( $entry->is_expired(1),       0,    'not a deleted entry');
 is( $entry->dir,               '~',    'entry has a directory');
+is( $entry->is_broken,           0,    'entry directory exists');
 is( $entry->name,               '',    'entry has no name');
 is( $entry->description,        '',    'entry has no description');
 is( $entry->script,             '',    'entry has no script');
@@ -80,5 +81,7 @@ is( $centry->cmp_property('dir', $entry),        -1, 'first entry has shorter su
 is( $entry->cmp_property('visits', $centry),      1, 'first entry has more visits');
 is( $entry->cmp_property('delete_time', $centry), 0, 'both entry have no delete time');
 
+my $bentry = App::Goto::Dir::Data::Entry->new( 'bentry' );
+is( ref $bentry,           '',    'can not create entry with broken dir');
 
 exit 0;
