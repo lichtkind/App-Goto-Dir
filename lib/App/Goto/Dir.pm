@@ -4,17 +4,16 @@
 package App::Goto::Dir;
 our $VERSION = 0.4;
 
-use v5.18;
+use v5.20;
 use warnings;
 no warnings  qw/experimental::smartmatch/;
 use feature qw/switch/;
 use File::Spec;
 use YAML;
 use App::Goto::Dir::Command;
+use App::Goto::Dir::Command::Parser;
 use App::Goto::Dir::Config;
 use App::Goto::Dir::Data;
-use App::Goto::Dir::Help;
-use App::Goto::Dir::Parse;
 
 my $file = "goto_dir_config.yml";
 

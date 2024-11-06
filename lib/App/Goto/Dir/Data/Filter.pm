@@ -2,9 +2,10 @@
 # entry list filter which may hides entries with defined properties
 
 package App::Goto::Dir::Data::Filter;   # index: 1 .. count
-use v5.18;
+use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
+use App::Goto::Dir::Data::ValueType::Relations;
 
 #### constructor, object life cycle ############################################
 sub new {
@@ -26,10 +27,10 @@ sub restate {
 sub state   { return {name => $_[0]->{'name'}, description => $_[0]->{'description'}, code => $_[0]->{'code'}, } }
 
 #### attribute accessors ###############################################
-sub name            { $_[0]->{'name'} }
-sub rename          { $_[0]->{'name'} = $_[1] if defined $_[1] and $_[1] }
-sub description     { $_[0]->{'description'} }
-sub set_description { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
+sub name         { $_[0]->{'name'} }
+sub rename       { $_[0]->{'name'} = $_[1] if defined $_[1] and $_[1] }
+sub description  { $_[0]->{'description'} }
+sub redescribe   { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
 
 #### entry API #################################################################
 sub accept_entry    {
@@ -44,8 +45,5 @@ sub report {
 }
 #### end ###############################################################
 
-
-sub new {}  # ~code, ~filter_name -- ~filter_descrip. --> .filter
-sub pass {} # .entry
 
 1;
