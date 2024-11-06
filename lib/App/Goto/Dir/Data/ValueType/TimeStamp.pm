@@ -23,11 +23,11 @@ sub clear   { my $temp = $_[0]->{'value'}; $_[0]->{'value'} = 0; return $temp }
 sub is_empty         { int ! $_[0]->value  }
 sub age               { $_[0]->is_empty ? 0 : (_now() - $_[0]->value) }
 sub age_in_days        { $_[0]->age / 86400 }
-sub is_older_then_stamp { $_[0]->is_empty ? 0 : ($_[0]->value > $_[1]) ? 1 : 0 }
+sub is_older_then_stamp { $_[0]->is_empty ? 0 : ($_[0]->value < $_[1]) ? 1 : 0 }
 sub is_older_then_period { $_[0]->is_empty ? 0 : ($_[0]->age > $_[1]) ? 1 : 0 }
 
 #### display ###########################################################
-sub format {
+sub format { #  -- ?also_time, ?sortable --> ~format
     my $self = shift;
     my $time = shift // 0; # date only if zero
     my $sortable = shift // 0;
