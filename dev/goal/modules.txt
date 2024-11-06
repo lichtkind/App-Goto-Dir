@@ -1,4 +1,5 @@
 
+
  Directorystructure of App::Goto::Dir Modules:
 
 ── App
@@ -19,6 +20,7 @@
                   └── Help.pm                 # user help texts
 
 
+
  Dependencystructure of App::Goto::Dir Modules:
 
 ── App::Goto::Dir.pm                    # main class, starter routine, eval loop
@@ -29,14 +31,14 @@
      │         └── ::Default.pm               # inline default configs
      └── .::Data.pm                       # load, store, manage all dir entries in lists with filters
                 ├── .::Entry.pm                # storage cell for one directory and correlated data
-                │          ├── ::VT::Directory.pm  # directory value store  and its formatting
-                │          ├── ::VT::Relations.pm  # state of a relations between an object and a list of objects
-                │          └── ::VT::TimeStamp.pm  # store for one time information, calculation, formatting
+                │          ├── ::VT::Directory.pm  # directory value store  and its formatting
+                │          ├── ::VT::Relations.pm  # state of a relations between an object and a list of objects
+                │          └── ::VT::TimeStamp.pm  # store for one time information, calculation, formatting
                 ├── .::Filter.pm               # entry list filter which may hides entries with defined properties
-                │          ├── ::Data::Entry.pm    # storage cell for one directory and correlated data
-                │          └── ::VT::Relations.pm  # state of a relations between an object and a list of objects
+                │          └── ::Data::Entry.pm    # storage cell for one directory and correlated data
                 └── .::List.pm                 # list of dir entries, handles their positions
-                            ├── ::Data::Entry.pm    # storage cell for one directory and correlated data
-                            └── ::Data::Filter.pm   # entry list filter which may hides entries with defined properties
+                            ├── ::Data::Entry.pm    # storage cell for one directory and correlated data
+                            ├── ::Data::Filter.pm   # entry list filter which may hides entries with defined properties
+                            └── ::VT::Relations.pm  # state of a relations between an object and a list of objects
 
 

@@ -5,7 +5,6 @@ package App::Goto::Dir::Data::Filter;
 use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
-use App::Goto::Dir::Data::ValueType::Relations;
 
 sub new {}       # ~code, ~filter_name -- ~filter_description --> .filter
 

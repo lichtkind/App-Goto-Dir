@@ -9,24 +9,18 @@ use App::Goto::Dir::Data::Entry;
 use App::Goto::Dir::Data::Filter;
 use App::Goto::Dir::Data::List;
 
-my %special_list = (   new => 'recently created directory entries',
-                       bin => 'deleted but not yet discarded entries',
-                       all => 'all entries, even the deleted',
-                      stay => 'all not deleted entries',
-                       now => 'recently visited entries, without deleted',
-                     named => 'entries with name, without deleted',
-                    broken => 'entries with not existing directories, not deleted',);
-my %special_entry = ( last => 'entry last visited',
-                      prev => 'entry second last visited',
-                      add  => 'last entry created',
-                      del  => 'last entry deleted',
-                      name => 'last entry named',
-                      move => 'last entry copied, moved or removed',);
+my $special_list = 'all';
+# filter   new => 'recently created directory entries',
+#          bin => 'deleted but not yet discarded entries',
+#          now => 'recently visited entries, without deleted',
+#          named => 'entries with name, without deleted',
+#          broken => 'entries with not existing directories, not deleted',);
 
 #### de- constructors ##################################################
 sub new {
     my ($pkg) = @_;
-    my $self = { list => {}, current_list => 'all', special_entry => {}, config => {
+    my $self = { lists => [], current_list_name => 'all', filter => [], named_entry => {},
+                 config => {
                      entry => { discard_deleted_in_days => 30,
                                 new_for_days => 40,
                                 recent_for_days => 40,

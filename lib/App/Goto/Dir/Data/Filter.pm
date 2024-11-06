@@ -5,7 +5,6 @@ package App::Goto::Dir::Data::Filter;   # index: 1 .. count
 use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
-use App::Goto::Dir::Data::ValueType::Relations;
 
 #### constructor, object life cycle ############################################
 sub new {
