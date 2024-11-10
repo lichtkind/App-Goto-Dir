@@ -6,16 +6,16 @@ use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
 
-sub new {}       # ~code, ~filter_name -- ~filter_description --> .filter
+sub new {}   # ~name, ~description, code --> .filter
 
-sub name          {} #                --> ~name
-sub description   {} #                --> ~description
-sub filter        {} #                --> .App::Goto::Dir::Data::ValueType::Relations
+sub name          {} #                   --> ~name
+sub description   {} #                   --> ~description
+sub list_states   {} #                   --> .App::Goto::Dir::Data::ValueType::Relations
 
-sub rename        {} #          ~name --> ~name
-sub redescribe    {} #   ~description --> ~description
+sub rename        {} #             ~name --> ~name
+sub redescribe    {} #      ~description --> ~description
 
-sub accept_entry  {} #         .entry --> ?
-sub report {}        #                --> ~report
+sub accept_entry  {} #            .entry --> ?
+sub report {}        #                   --> ~report
 
 1;

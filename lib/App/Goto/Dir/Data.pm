@@ -3,7 +3,7 @@
 
 
 package App::Goto::Dir::Data;
-use v5.18;
+use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
 use App::Goto::Dir::Data::Filter;
@@ -19,7 +19,8 @@ my $special_list = 'all';
 #### de- constructors ##################################################
 sub new {
     my ($pkg) = @_;
-    my $self = { lists => [], current_list_name => 'all', filter => [], named_entry => {},
+    my $self = { lists => [], current_list_name => 'all', filter => [],
+                 named_entry => {}, special_entry => {},
                  config => {
                      entry => { discard_deleted_in_days => 30,
                                 new_for_days => 40,
