@@ -23,7 +23,7 @@ sub redescribe    {} #   ~description --> ~description
 sub rescript      {} #        ~script --> ~script
 sub notate        {} #          ~note --> ~note
 
-sub list_pos      {} #                --> .App::Goto::Dir::Data::ValueType::Relations
+sub list_positions{} #                --> .::ValueType::Relations
 sub is_in_list    {} #     ~list_name --> ?
 
 #### time stamps #######################################################

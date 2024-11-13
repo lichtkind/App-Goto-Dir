@@ -38,11 +38,11 @@ is( $entry->is_deleted,          0,    'entry is undeleted --');
 is( $entry->get_property('delete_time'), 0, 'delete time via universal getter');
 
 
-is( ref $entry->list_pos, 'App::Goto::Dir::Data::ValueType::Relations',  'got access to list position object');
+is( ref $entry->list_positions, 'App::Goto::Dir::Data::ValueType::Relations',  'got access to list position object');
 is( $entry->is_in_list('all'),   0,  'is not in unknown list');
-$entry->list_pos->add_set('all', 5);
+$entry->list_positions->add_set('all', 5);
 is( $entry->is_in_list('all'),   1,  'is in known list');
-is( $entry->list_pos->get_in('all'),  5,  'got righ list position');
+is( $entry->list_positions->get_in('all'),  5,  'got righ list position');
 
 is( $entry->rename('home'),  'home',   'could rename entry');
 is( $entry->name,            'home',   'new entry name retrieved');

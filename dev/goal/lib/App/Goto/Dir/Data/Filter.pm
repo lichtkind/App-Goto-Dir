@@ -6,11 +6,11 @@ use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
 
-sub new {}   # ~name, ~description, code --> .filter
+sub new {}   # ~name, ~description, ~code, %list_modes --> .filter
 
 sub name          {} #                   --> ~name
 sub description   {} #                   --> ~description
-sub list_states   {} #                   --> .App::Goto::Dir::Data::ValueType::Relations
+sub list_modes    {} #                   --> .::ValueType::Relations
 
 sub rename        {} #             ~name --> ~name
 sub redescribe    {} #      ~description --> ~description

@@ -47,7 +47,7 @@ sub redescribe    { $_[0]->{'description'} = $_[1]   }
 sub rescript      { $_[0]->{'script'}      = $_[1]   }
 sub notate        { $_[0]->{'note'}        = $_[1]   }
 
-sub list_pos      { $_[0]->{'list_pos'} }
+sub list_positions{ $_[0]->{'list_pos'} }
 sub is_in_list    { $_[0]->{'list_pos'}->is_in_set( $_[1] ) }
 
 #### time stamps #######################################################

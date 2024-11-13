@@ -19,10 +19,10 @@ sub processed_entries {}  #                      --> @.entry # filtered and orde
 
 sub add_filter  {}        # .filter ~state       --> .filter
 sub remove_filter {}      # ~filter_name         --> .filter
-sub get_state  {}         # ~filter_name         --> ~state
-sub set_state  {}         # ~filter_name, ~state --> ~state
-
-
+sub get_state  {}         # ~filter_name         --> ~state             # := - inactive | - x o
+sub set_state  {}         # ~filter_name, ~state --> ~state                  x eXclude
+                                                                        #    o pass (OK)
+                                                                        #    m mark
 sub get_order        {}   #                      --> ~order
 sub set_order        {}   # ~order               --> ~order
 
