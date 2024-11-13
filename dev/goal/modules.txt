@@ -11,7 +11,7 @@
                   │     └── Default.pm          # inline default configs
                   ├── Data.pm                 # load, store, manage all dir entries in lists with filters
                   │     ├── Entry.pm            # storage cell for one directory and correlated data
-                  │     ├── Filter.pm           # entry list filter which may hides entries with defined properties
+                  │     ├── Filter.pm           # entry list filter which may hide entries with defined properties
                   │     ├── List.pm             # list of dir entries, handles their positions
                   │     └── ValueType
                   │           ├── Directory.pm     # directory value store  and its formatting
@@ -34,7 +34,7 @@
                 │          ├── ::VT::Directory.pm  # directory value store  and its formatting
                 │          ├── ::VT::Relations.pm  # state of a relations between an object and a list of objects
                 │          └── ::VT::TimeStamp.pm  # store for one time information, calculation, formatting
-                ├── .::Filter.pm               # entry list filter which may hides entries with defined properties
+                ├── .::Filter.pm               # entry list filter which may hide entries with defined properties
                 │          └── ::Data::Entry.pm    # storage cell for one directory and correlated data
                 └── .::List.pm                 # list of dir entries, handles their positions
                             ├── ::Data::Entry.pm    # storage cell for one directory and correlated data

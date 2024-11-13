@@ -1,5 +1,5 @@
 
-# entry list filter which may hides entries with defined properties
+# entry list filter which may hide entries with defined properties
 
 package App::Goto::Dir::Data::Filter;
 use v5.20;
