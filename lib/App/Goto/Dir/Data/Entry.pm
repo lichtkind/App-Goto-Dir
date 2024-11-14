@@ -84,16 +84,16 @@ my $property_is_numeric = { age  => 1,       last_visit => 1,   delete_time => 1
 };
 
 sub is_property {
-    my ($self, $property) = @_;
+    my ($property) = @_;
     (defined $property and exists $cmp_value->{ $property }) ? 1 : 0;
 }
 sub get_property  {
     my ($self, $property) = @_;
-    $cmp_value->{ $property }->( $self ) if $self->is_property( $property );
+    $cmp_value->{ $property }->( $self ) if is_property( $property );
 }
 sub cmp_property {
     my ($self, $property, $cell) = @_;
-    return unless $self->is_property( $property ) and ref $cell eq __PACKAGE__;
+    return unless is_property( $property ) and ref $cell eq __PACKAGE__;
     $property_is_numeric->{$property}
         ? ($self->get_property( $property ) <=> $cell->get_property( $property ))
         : ($self->get_property( $property ) cmp $cell->get_property( $property ));

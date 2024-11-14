@@ -69,9 +69,9 @@ is( $entry->dir,                $ndir, 'entry has now a different directory');
 is( $entry->get_property('dir'),$edir, 'entry dir retrieved via universal getter');
 
 
-is( $entry->is_property('diro'), 0, 'diro is not an available property');
-is( $entry->is_property('dir'),  1, 'dir is an available property');
-is( $entry->is_property('age'),  1, 'dir is an available property');
+is( App::Goto::Dir::Data::Entry::is_property('diro'), 0, 'diro is not an available property');
+is( App::Goto::Dir::Data::Entry::is_property('dir'),  1, 'dir is an available property');
+is( App::Goto::Dir::Data::Entry::is_property('age'),  1, 'dir is an available property');
 
 my $centry = App::Goto::Dir::Data::Entry->new( $ENV{'HOME'}, 'name', 'description' );
 is( $centry->name,               'name',           'entry a name via constructor');
