@@ -42,8 +42,8 @@ sub redescribe   { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
 sub list_modes   { $_[0]->{'modes'} }                                   #        --> .::ValueType::Relations
 
 #### entry API #################################################################
-sub accept_entry    { $_[0]->{'ref'}->($_[1]) }                         # .entry --> ?
-sub report {                                                            #        --> ~report
+sub accept_entry { $_[0]->{'ref'}->($_[1]) }                            # .entry --> ?
+sub report       {                                                      #        --> ~report
     my ($self, $width) = @_;
     $width //= 80;
     return substr( $self->{'name'}.': '.$self->{'description'}, 0, $width);

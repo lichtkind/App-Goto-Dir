@@ -8,7 +8,7 @@ use App::Goto::Dir::Data::ValueType::Relations;
 use App::Goto::Dir::Data::Entry;
 
 #### constructor, object life cycle ############################################
-sub new {
+sub new { #                     ~name ~decription, @.entry, @.filter --> .list
     my ($pkg, $name, $description, $entries, $filter) = @_;
     return unless ref $entries eq 'ARRAY' and defined $name;
     my @e = sort { $a->list_pos->get($name) <=> $b->list_pos->get($name) }
@@ -151,3 +151,23 @@ sub report {
 #### end ###############################################################
 
 1;
+
+__END__
+sub new {} # ~name -- ~decription, @.entry, @.filter --> .list
+sub state {}              #                      --> %state ()
+
+sub add_entry { }         # .entry -- +pos       --> ?
+sub remove_entry {}       #           +pos       --> .entry
+sub get_entry {}          #           +pos       --> .entry
+
+sub all_entries {}        #                      --> @.entry
+sub processed_entries {}  #                      --> @.entry # filtered and ordered
+
+sub add_filter  {}        # .filter ~state       --> .filter
+sub remove_filter {}      # ~filter_name         --> .filter
+sub get_state  {}         # ~filter_name         --> ~state             # := - inactive | - x o
+sub set_state  {}         # ~filter_name, ~state --> ~state                  x eXclude
+                                                                        #    o pass (OK)
+                                                                        #    m mark
+sub get_order        {}   #                      --> ~order
+sub set_order        {}   # ~order               --> ~order

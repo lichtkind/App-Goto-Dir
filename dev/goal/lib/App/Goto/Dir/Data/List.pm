@@ -7,7 +7,7 @@ use warnings;
 use App::Goto::Dir::Data::ValueType::Relations;
 use App::Goto::Dir::Data::Entry;
 
-sub new {} # ~name -- ~decription, @.entry, @.filter --> .list
+sub new {}# ~name ~decription, @.entry, @.filter --> .list
 sub state {}              #                      --> %state ()
 
 sub add_entry { }         # .entry -- +pos       --> ?
@@ -25,6 +25,5 @@ sub set_state  {}         # ~filter_name, ~state --> ~state                  x e
                                                                         #    m mark
 sub get_order        {}   #                      --> ~order
 sub set_order        {}   # ~order               --> ~order
-
 
 1;
