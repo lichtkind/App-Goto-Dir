@@ -1,5 +1,5 @@
 
-# directory value store and its formatting
+# store and formatting for a directory string
 
 package App::Goto::Dir::Data::ValueType::Directory;
 use v5.20;

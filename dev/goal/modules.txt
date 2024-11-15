@@ -11,10 +11,10 @@
                   │     └── Default.pm          # inline default configs
                   ├── Data.pm                 # load, store, manage all dir entries in lists with filters
                   │     ├── Entry.pm            # storage cell for one directory and correlated data
-                  │     ├── Filter.pm           # entry list filter which may hide entries with defined properties
+                  │     ├── Filter.pm           # entry list filter to hide entries that fail a condition defined as ~code
                   │     ├── List.pm             # list of dir entries, handles their positions
                   │     └── ValueType
-                  │           ├── Directory.pm     # directory value store  and its formatting
+                  │           ├── Directory.pm     # store and formatting for a directory string
                   │           ├── Relations.pm     # state of a relations between an object and a list of objects
                   │           └── TimeStamp.pm     # store for one time information, calculation, formatting
                   └── Help.pm                 # user help texts
@@ -31,10 +31,10 @@
      │         └── ::Default.pm               # inline default configs
      └── .::Data.pm                       # load, store, manage all dir entries in lists with filters
                 ├── .::Entry.pm                # storage cell for one directory and correlated data
-                │          ├── ::VT::Directory.pm  # directory value store  and its formatting
+                │          ├── ::VT::Directory.pm  # store and formatting for a directory string
                 │          ├── ::VT::Relations.pm  # state of a relations between an object and a list of objects
                 │          └── ::VT::TimeStamp.pm  # store for one time information, calculation, formatting
-                ├── .::Filter.pm               # entry list filter which may hide entries with defined properties
+                ├── .::Filter.pm               # entry list filter to hide entries that fail a condition defined as ~code
                 │          └── ::Data::Entry.pm    # storage cell for one directory and correlated data
                 └── .::List.pm                 # list of dir entries, handles their positions
                             ├── ::Data::Entry.pm    # storage cell for one directory and correlated data
