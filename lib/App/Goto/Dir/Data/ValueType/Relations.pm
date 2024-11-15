@@ -2,7 +2,7 @@
 # state of a relations between an object and a list of objects
 
 package App::Goto::Dir::Data::ValueType::Relations;
-use v5.18;
+use v5.20;
 use warnings;
 
 #### de- constructors ##################################################
