@@ -18,20 +18,24 @@ sub new {  #                              ~name, ~description, ~code, %list_mode
     return "filter $name got bad code: $code" unless $full_code;
     my $ref = eval $full_code;
     return "filter $name got bad code: $full_code: $@" if $@;   # smoke test
-    bless { name => $name, description => $description, code => $code, ref => $ref,
+    bless { name => $name, description => $description, code => $full_code, ref => $ref,
            modes => App::Goto::Dir::Data::ValueType::Relations->restate( $modes ), };
 }
 sub restate {
-    my %self = %{$_[0]};
-    my $full_code = _complete_code( $self{'code'} );
-    return "filter $self{name} got bad code: $self{code}" unless $full_code;
-    $self{'ref'} = eval $full_code;
-    return "filter $self{name} got bad code: $full_code: $@" if $@;
-    $self{'modes'} = App::Goto::Dir::Data::ValueType::Relations->restate( $self{'modes'} );
-    bless %self;
+    my ($pkg, $state) = @_;
+    return if ref $state ne 'HASH';
+    my $self = { %$state };
+    my $full_code = _complete_code( $self->{'code'} );
+    return "filter $self->{name} got bad code: $self->{code}" unless $full_code;
+    $self->{'ref'} = eval $full_code;
+    return "filter $self->{name} got bad code: $full_code: $@" if $@;
+    $self->{'modes'} = App::Goto::Dir::Data::ValueType::Relations->restate( $self->{'modes'} );
+    bless $self;
 }
-sub state  { return {name => $_[0]->{'name'}, description => $_[0]->{'description'},
-                     code => $_[0]->{'code'},       modes => $_[0]->{'modes'}->state } }
+sub state  {
+    return { name => $_[0]->{'name'}, description => $_[0]->{'description'},
+             code => $_[0]->{'code'},       modes => $_[0]->{'modes'}->state };
+}
 
 #### attribute accessors ###############################################
 sub name         { $_[0]->{'name'} }                                    #        --> ~name
@@ -54,7 +58,7 @@ sub _complete_code {
     my $code = shift;
     return unless defined $code and $code;
     return $code if length($code) > 5 and substr($code,0,3) eq 'sub';
-    my $return = "sub { \n return 0 if ref ".'$_[0]'." eq '$entry_class';\n";
+    my $return = "sub { \n return 0 if ref ".'$_[0]'." ne '$entry_class';\n";
     my $temp = $code;
     while ($temp =~ /\$(\w+)/) {
         my $found = $1;
