@@ -7,23 +7,25 @@ use warnings;
 use App::Goto::Dir::Data::Entry;
 use App::Goto::Dir::Data::Filter;
 
-sub new {} # ~name ~decription, @.entry, @.filter --> .list
-sub state {}               #                      --> %state ()
+sub new {} # ~name ~decription, @.entry, @.filter -- ~order --> .list
+sub state {} #                                            --> %state
 
 sub name             {}    #                      --> ~name
 sub description      {}    #                      --> ~description
 sub rename           {}    #                ~name --> ?~name
 sub redescribe       {}    #         ~description --> ?~description
+sub sorting_order    {}    #                      --> ~order
+sub set_sorting_order{}    #               ~order --> ?~order
 
 sub all_entries      {}    #                      --> @.entry
 sub entry_count      {}    #                      --> +
+sub is_position      {}    #                 +pos --> ?
+sub nearest_position {}    #                 +pos --> +pos
 sub has_entry        {}    #               .entry --> ?
 sub get_entry_by_pos {}    #                 +pos --> ?.entry
 sub add_entry        {}    #       .entry -- +pos --> ?.entry
 sub remove_entry     {}    #                 +pos --> ?.entry
 
-sub get_order        {}    #                      --> ~order
-sub set_order        {}    # ~order               --> ?~order
 sub processed_entries{}    #                      --> @.entry           # filtered and ordered
 sub report           {}    #                      --> ~report
 

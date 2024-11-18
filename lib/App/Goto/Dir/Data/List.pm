@@ -11,41 +11,46 @@ my $entry_class = 'App::Goto::Dir::Data::Entry';
 my $filter_class = 'App::Goto::Dir::Data::Filter';
 
 #### constructor, object life cycle ############################################
-sub new { #                     ~name ~decription, @.entry, @.filter --> .list
-    my ($pkg, $name, $description, $entries, $filter) = @_;
-    return 'need 4 arguments: name, description, list entries and list of filter'
+sub new { #                     ~name ~decription, @.entry, @.filter -- ~order --> .list
+    my ($pkg, $name, $description, $entries, $filter, $order) = @_;
+    return 'need 4 arguments: name, description, list entries and list of filter, ordering name is optional'
          if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY' or not $name or not $description;
 
     my @entries = grep { _is_entry( $_ ) } @$entries;
     my @filter = grep { _is_filter( $_ ) } @$filter;
     my $self = bless { name => $name, description => $description,
-                       entry => \@entries, filter => \@filter     };
+                       entry => \@entries, filter => \@filter, sorting_order => $order // 'position' };
     $self->_refresh_list_pos;
     $self;
 }
 
 sub restate {
     my ($pkg, $state, $entries, $filter) = @_;
-    App::Goto::Dir::Data::List->new( $state->{'name'}, $state->{'description'}, $entries, $filter);
+    App::Goto::Dir::Data::List->new( $state->{'name'}, $state->{'description'},
+                                     $entries, $filter, $state->{'order'} );
 }
-sub state   { return {name => $_[0]->{'name'}, description => $_[0]->{'description'} } }
+sub state   { return { name => $_[0]->{'name'}, description => $_[0]->{'description'},
+                       order => $_[0]->{'order'}                                       }}
 sub destroy {
     my ($self) = @_;
     $_->list_pos->remove_list( $self->name ) for $self->all_entries;
-    return 1;                      # object can be discarded by holder
+    return 1;                      # object can be discarded by holder if positive
 }
 
 #### list accessors ############################################################
-sub name            { $_[0]->{'name'} }
-sub rename          {
+sub name              { $_[0]->{'name'} }
+sub rename            {
     my ($self, $new_name) = @_;
     my $old_name = $self->name;
     return unless defined $new_name and $new_name and $new_name ne $old_name;
     $_->add_set( $new_name, $_->remove_set( $old_name ) ) for $self->all_entries, $self->all_filter;
     $self->{'name'} = $new_name;
 }
-sub description     { $_[0]->{'description'} }
-sub redescribe      { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
+sub description       { $_[0]->{'description'} }
+sub redescribe        { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
+sub sorting_order     { $_[0]->{'sorting_order'} }
+sub set_sorting_order { $_[0]->{'sorting_order'} = $_[1] if defined $_[1] and $_[1]
+                            and ($_[1] eq 'position' or App::Goto::Dir::Data::Entry::is_property($_[1])) }
 
 #### entry API #################################################################
 sub all_entries     { @{$_[0]->{'entry'}} }
@@ -59,13 +64,6 @@ sub get_entry_by_pos{
 
 #### entry position API ########################################################
 
-sub resolve_position     {
-    my ($self, $pos, $add_range) = @_;
-    return 0 unless defined $pos and $pos and (int($pos) == $pos+0 );
-    my $max = $self->entry_count + ( $add_range // 0);
-    return 0 unless $pos <= $max and $pos >= (- $max);
-    $pos > 0 ? $pos : ( $max + 1 - $pos);
-}
 sub is_position     {
     my ($self, $pos, $add_range) = @_;
     $self->resolve_position( $pos, $add_range ) ? 1 : 0;
@@ -136,6 +134,14 @@ sub _refresh_list_pos {
     my ($self) = @_;
     $self->{'entry'}[$_-1]->list_pos->set_in( $self->name, $_ ) for 1 .. $self->entry_count;
 }
+sub _resolve_position     {
+    my ($self, $pos, $add_range) = @_;
+    return 0 unless defined $pos and $pos and (int($pos) == $pos+0 );
+    my $max = $self->entry_count + ( $add_range // 0);
+    return 0 unless $pos <= $max and $pos >= (- $max);
+    $pos > 0 ? $pos : ( $max + 1 - $pos);
+}
+
 #### end ###############################################################
 
 1;
@@ -144,7 +150,10 @@ __END__
 
 sub all_entries      {}    #                      --> @.entry
 sub entry_count      {}    #                      --> +
-sub get_entry        {}    #                 +pos --> ?.entry
+sub is_position      {}    #                 +pos --> ?
+sub nearest_position {}    #                 +pos --> +pos
+sub has_entry        {}    #               .entry --> ?
+sub get_entry_by_pos {}    #                 +pos --> ?.entry
 sub add_entry        {}    #       .entry -- +pos --> ?.entry
 sub remove_entry     {}    #                 +pos --> ?.entry
 
@@ -159,7 +168,7 @@ sub remove_filter    {}    #  ~filter_name        --> ?.filter
 sub get_filter_mode  {}    #  ~filter_name        --> ?~mode            # := - inactive
 sub set_filter_mode  {}    #  ~filter_name, ~mode --> ?~mode            #    x eXclude
                                                                         #    o pass (OK)
-                                                                        #    m mark                                                                        #    m mark
+                                                                        #    m mark                                                                      #    m mark
 sub get_entry_by_property {
     my ($self, $property, $value) = @_;
     return $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
