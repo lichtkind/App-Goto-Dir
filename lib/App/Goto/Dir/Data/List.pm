@@ -4,34 +4,33 @@
 package App::Goto::Dir::Data::List;   # index: 1 .. count
 use v5.20;
 use warnings;
-use App::Goto::Dir::Data::ValueType::Relations;
 use App::Goto::Dir::Data::Entry;
+use App::Goto::Dir::Data::Filter;
+
+my $entry_class = 'App::Goto::Dir::Data::Entry';
+my $filter_class = 'App::Goto::Dir::Data::Filter';
 
 #### constructor, object life cycle ############################################
 sub new { #                     ~name ~decription, @.entry, @.filter --> .list
     my ($pkg, $name, $description, $entries, $filter) = @_;
-    return unless ref $entries eq 'ARRAY' and defined $name;
-    my @e = sort { $a->list_pos->get($name) <=> $b->list_pos->get($name) }
-            grep { $_->list_pos->get($name)}
-            grep { is_entry( undef, $_ )  } @$entries;
-            ref eq 'App::Goto::Dir::Data::Filter'
+    return 'need 4 arguments: name, description, list entries and list of filter'
+         if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY' or not $name or not $description;
 
-    my $self = bless { name => $name, description => $description // '',
-                       entry => \@e, filter => \@f };
+    my @entries = grep { _is_entry( $_ ) } @$entries;
+    my @filter = grep { _is_filter( $_ ) } @$filter;
+    my $self = bless { name => $name, description => $description,
+                       entry => \@entries, filter => \@filter     };
     $self->_refresh_list_pos;
     $self;
 }
 
 sub restate {
-    my ($state, $entries) = @_;
-    App::Goto::Dir::Data::List->new( $state->{'name'}, $state->{'description'}, $state->{'special'}, $entries);
+    my ($pkg, $state, $entries, $filter) = @_;
+    App::Goto::Dir::Data::List->new( $state->{'name'}, $state->{'description'}, $entries, $filter);
 }
-sub state   {
-    return {name => $_[0]->{'name'}, description => $_[0]->{'description'}, special => $_[0]->{'special'}, };
-}
+sub state   { return {name => $_[0]->{'name'}, description => $_[0]->{'description'} } }
 sub destroy {
     my ($self) = @_;
-    return 0 if $self->is_special; # user can not remove special lists
     $_->list_pos->remove_list( $self->name ) for $self->all_entries;
     return 1;                      # object can be discarded by holder
 }
@@ -42,39 +41,23 @@ sub rename          {
     my ($self, $new_name) = @_;
     my $old_name = $self->name;
     return unless defined $new_name and $new_name and $new_name ne $old_name;
-    if ($self->entry_count > 0) {
-        $_->list_pos->add_list( $new_name, $_->list_pos->remove_list( $old_name ) )
-            for $self->all_entries;
-    }
+    $_->add_set( $new_name, $_->remove_set( $old_name ) ) for $self->all_entries, $self->all_filter;
     $self->{'name'} = $new_name;
 }
 sub description     { $_[0]->{'description'} }
-sub set_description { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
-sub is_special      { $_[0]->{'special'} ? 1 : 0}
+sub redescribe      { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
 
 #### entry API #################################################################
-sub is_entry        { (ref $_[1] eq 'App::Goto::Dir::Data::Entry') ? 1 : 0 }
-sub has_entry       { ($_[0]->is_entry( $_[1] ) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
 sub all_entries     { @{$_[0]->{'entry'}} }
 sub entry_count     { int @{$_[0]->{'entry'}} }
-
-sub get_entry_by_property {
-    my ($self, $property, $value) = @_;
-    return $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
-    return unless App::Goto::Dir::Data::Entry::is_property( $property ) and defined $value;
-    my @entries;
-    for my $entry ($self->all_entries){
-        push @entries, $entry if $entry->property_equals($property, $value);
-    }
-    @entries == 1 ? $entries[0] : @entries;
+sub has_entry       { (is_entry( $_[1]) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
+sub get_entry_by_pos{
+    my ($self, $pos) = @_;
+    $pos = $self->_resolve_position( $pos );
+    $pos ? $self->{'entry'}[ $pos - 1 ] : undef;
 }
 
 #### entry position API ########################################################
-sub get_entry_by_pos {
-    my ($self, $pos) = @_;
-    $pos = $self->resolve_position( $pos );
-    $pos ? $self->{'entry'}[ $pos - 1 ] : undef;
-}
 
 sub resolve_position     {
     my ($self, $pos, $add_range) = @_;
@@ -95,10 +78,6 @@ sub nearest_position {
     return 1 unless defined $pos and $pos;
     $pos = $max + 1 - $pos if $pos < 0;
     return ($pos > $max) ? $max : $pos;
-}
-sub _refresh_list_pos {
-    my ($self) = @_;
-    $self->{'entry'}[$_-1]->list_pos->set( $self->name, $_ ) for 1 .. $self->entry_count;
 }
 
 #### entry position API ########################################################
@@ -128,7 +107,6 @@ sub remove_entry {
     $entry;
 }
 
-### output #####################################################################
 sub report {
     my ($self, $sort_order, $reverse, $columns) = @_;
     my $report = ' - entries of list '.$self->name." :\n";
@@ -148,26 +126,48 @@ sub report {
     $report
 }
 
+#### filter API #################################################################
+sub all_filter { @{$_[0]->{'filter'}} }       #                      --> @.filter
+
+##### helper ###########################################################
+sub _is_entry  { (ref $_[0] eq $entry_class) ? 1 : 0 }
+sub _is_filter { (ref $_[0] eq $filter_class) ? 1 : 0 }
+sub _refresh_list_pos {
+    my ($self) = @_;
+    $self->{'entry'}[$_-1]->list_pos->set_in( $self->name, $_ ) for 1 .. $self->entry_count;
+}
 #### end ###############################################################
 
 1;
 
 __END__
-sub new {} # ~name -- ~decription, @.entry, @.filter --> .list
-sub state {}              #                      --> %state ()
 
-sub add_entry { }         # .entry -- +pos       --> ?
-sub remove_entry {}       #           +pos       --> .entry
-sub get_entry {}          #           +pos       --> .entry
+sub all_entries      {}    #                      --> @.entry
+sub entry_count      {}    #                      --> +
+sub get_entry        {}    #                 +pos --> ?.entry
+sub add_entry        {}    #       .entry -- +pos --> ?.entry
+sub remove_entry     {}    #                 +pos --> ?.entry
 
-sub all_entries {}        #                      --> @.entry
-sub processed_entries {}  #                      --> @.entry # filtered and ordered
+sub get_order        {}    #                      --> ~order
+sub set_order        {}    # ~order               --> ?~order
+sub processed_entries{}    #                      --> @.entry           # filtered and ordered
+sub report           {}    #                      --> ~report
 
-sub add_filter  {}        # .filter ~state       --> .filter
-sub remove_filter {}      # ~filter_name         --> .filter
-sub get_state  {}         # ~filter_name         --> ~state             # := - inactive | - x o
-sub set_state  {}         # ~filter_name, ~state --> ~state                  x eXclude
+sub all_filter       {}    #                      --> @.filter
+sub add_filter       {}    #  .filter,      ~mode --> ?.filter
+sub remove_filter    {}    #  ~filter_name        --> ?.filter
+sub get_filter_mode  {}    #  ~filter_name        --> ?~mode            # := - inactive
+sub set_filter_mode  {}    #  ~filter_name, ~mode --> ?~mode            #    x eXclude
                                                                         #    o pass (OK)
-                                                                        #    m mark
-sub get_order        {}   #                      --> ~order
-sub set_order        {}   # ~order               --> ~order
+                                                                        #    m mark                                                                        #    m mark
+sub get_entry_by_property {
+    my ($self, $property, $value) = @_;
+    return $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
+    return unless App::Goto::Dir::Data::Entry::is_property( $property ) and defined $value;
+    my @entries;
+    for my $entry ($self->all_entries){
+        push @entries, $entry if $entry->property_equals($property, $value);
+    }
+    @entries == 1 ? $entries[0] : @entries;
+}
+

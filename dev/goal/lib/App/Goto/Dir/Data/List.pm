@@ -17,7 +17,8 @@ sub redescribe       {}    #         ~description --> ?~description
 
 sub all_entries      {}    #                      --> @.entry
 sub entry_count      {}    #                      --> +
-sub get_entry        {}    #                 +pos --> ?.entry
+sub has_entry        {}    #               .entry --> ?
+sub get_entry_by_pos {}    #                 +pos --> ?.entry
 sub add_entry        {}    #       .entry -- +pos --> ?.entry
 sub remove_entry     {}    #                 +pos --> ?.entry
 

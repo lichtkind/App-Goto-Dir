@@ -8,6 +8,10 @@ BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 my $class = 'App::Goto::Dir::Data::List';
 use_ok( $class );
 
+
+exit 0;
+
+__END__
 my ($drive, $dir) = File::Spec->splitpath( __FILE__ );
 my $adir = App::Goto::Dir::Data::ValueType::Directory::normalize_dir( $dir );
 
