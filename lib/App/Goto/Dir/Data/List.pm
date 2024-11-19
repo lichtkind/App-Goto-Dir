@@ -16,10 +16,10 @@ sub new { #           ~name ~decription, @.entry, @.filter -- ~order --> .list
     return 'need 4 arguments: name, description, list entries and list of filter, ordering name is optional'
          if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY' or not $name or not $description;
 
-    my @entries = grep { _is_entry( $_ ) } @$entries;
-    my @filter = grep { _is_filter( $_ ) } @$filter;
+    my @entries =                       grep { _is_entry( $_ ) } @$entries;
+    my %filter = map { $_->name => $_ } grep { _is_filter( $_ ) } @$filter;
     my $self = bless { name => $name, description => $description,
-                       entry => \@entries, filter => \@filter, sorting_order => 'position' };
+                       entry => \@entries, filter => \%filter, sorting_order => 'position' };
     $self->_refresh_list_pos;
     $self->set_sorting_order( $order );
     $self;
@@ -149,7 +149,32 @@ sub report {
 }
 
 #### filter API #################################################################
-sub all_filter { @{$_[0]->{'filter'}} }       #                      --> @.filter
+sub all_filter { values %{$_[0]->{'filter'}} }       #                      --> @.filter
+sub add_filter {                              #  .filter,      ~mode --> ?.filter
+    my ($self, $filter, $mode) = @_;
+    return 'argument is no filter class' unless _is_filter( $filter );
+    return 'filter '.$filter->name.'is already added' if exists $self->{'filter'}{ $filter->name };
+    $self->{'filter'}{ $filter->name } = $filter;
+    $mode = '-' unless defined $mode and _is_filter_mode( $mode);     # default is inactive
+    $filter->list_modes->add_set( $self->{'name'}, $mode );
+    $filter;
+}
+sub remove_filter {                           #  ~filter_name        --> ?.filter
+    my ($self, $filter_name) = @_;
+    return unless exists $self->{'filter'}{ $filter_name };
+    $self->{'filter'}{ $filter_name }->list_modes->remove_set( $self->{'name'} );
+    delete $self->{'filter'}{ $filter_name };
+}
+sub get_filter_mode {                         #  ~filter_name        --> ?~mode
+    my ($self, $filter_name) = @_;
+    return unless exists $self->{'filter'}{ $filter_name };
+    $self->{'filter'}{ $filter_name }->list_modes->get_in( $self->{'name'} );
+}
+sub set_filter_mode {                         #  ~filter_name, ~mode --> ?~mode
+    my ($self, $filter_name, $mode) = @_;
+    return unless exists $self->{'filter'}{ $filter_name } and _is_filter_mode( $mode );
+    $self->{'filter'}{ $filter_name }->list_modes->set_in( $self->{'name'}, $mode );
+}
 
 ##### helper ###########################################################
 sub _is_entry  { (ref $_[0] eq $entry_class) ? 1 : 0 }
@@ -165,22 +190,13 @@ sub _resolve_position     {
     return 0 unless $pos <= $max and $pos >= (- $max);
     $pos > 0 ? $pos : ( $max + 1 - $pos);
 }
+sub _is_filter_mode { (defined $_[0] and ($_[0] eq '-' or $_[0] eq 'x' or $_[0] eq 'o' or $_[0] eq 'm')) ? 1 : 0 }
 
 #### end ###############################################################
 
 1;
 
 __END__
-sub processed_entries{}    #                      --> @.entry           # filtered and ordered
-sub report           {}    #                      --> ~report
-
-sub all_filter       {}    #                      --> @.filter
-sub add_filter       {}    #  .filter,      ~mode --> ?.filter
-sub remove_filter    {}    #  ~filter_name        --> ?.filter
-sub get_filter_mode  {}    #  ~filter_name        --> ?~mode            # := - inactive
-sub set_filter_mode  {}    #  ~filter_name, ~mode --> ?~mode            #    x eXclude
-                                                                        #    o pass (OK)
-                                                                        #    m mark                                                                      #    m mark
 sub get_entry_from_property {
     my ($self, $property, $value) = @_;
     return $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
@@ -191,4 +207,3 @@ sub get_entry_from_property {
     }
     @entries == 1 ? $entries[0] : @entries;
 }
-
