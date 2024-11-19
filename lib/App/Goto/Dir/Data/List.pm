@@ -11,7 +11,7 @@ my $entry_class = 'App::Goto::Dir::Data::Entry';
 my $filter_class = 'App::Goto::Dir::Data::Filter';
 
 #### constructor, object life cycle ############################################
-sub new { #                     ~name ~decription, @.entry, @.filter -- ~order --> .list
+sub new { #           ~name ~decription, @.entry, @.filter -- ~order --> .list
     my ($pkg, $name, $description, $entries, $filter, $order) = @_;
     return 'need 4 arguments: name, description, list entries and list of filter, ordering name is optional'
          if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY' or not $name or not $description;
@@ -19,22 +19,22 @@ sub new { #                     ~name ~decription, @.entry, @.filter -- ~order -
     my @entries = grep { _is_entry( $_ ) } @$entries;
     my @filter = grep { _is_filter( $_ ) } @$filter;
     my $self = bless { name => $name, description => $description,
-                       entry => \@entries, filter => \@filter, sorting_order => $order // 'position' };
+                       entry => \@entries, filter => \@filter, sorting_order => 'position' };
     $self->_refresh_list_pos;
+    $self->set_sorting_order( $order );
     $self;
 }
 
 sub restate {
     my ($pkg, $state, $entries, $filter) = @_;
     App::Goto::Dir::Data::List->new( $state->{'name'}, $state->{'description'},
-                                     $entries, $filter, $state->{'order'} );
+                                     $entries, $filter, $state->{'order'}      );
 }
-sub state   { return { name => $_[0]->{'name'}, description => $_[0]->{'description'},
-                       order => $_[0]->{'order'}                                       }}
+sub state   { return { name => $_[0]->{'name'}, description => $_[0]->{'description'}, order => $_[0]->{'order'} }}
 sub destroy {
     my ($self) = @_;
     $_->list_pos->remove_list( $self->name ) for $self->all_entries;
-    return 1;                      # object can be discarded by holder if positive
+    return 1;                      # object can be discarded by holder if return is positive
 }
 
 #### list accessors ############################################################
@@ -49,27 +49,32 @@ sub rename            {
 sub description       { $_[0]->{'description'} }
 sub redescribe        { $_[0]->{'description'} = $_[1] if defined $_[1] and $_[1] }
 sub sorting_order     { $_[0]->{'sorting_order'} }
-sub set_sorting_order { $_[0]->{'sorting_order'} = $_[1] if defined $_[1] and $_[1]
-                            and ($_[1] eq 'position' or App::Goto::Dir::Data::Entry::is_property($_[1])) }
-
-#### entry API #################################################################
-sub all_entries     { @{$_[0]->{'entry'}} }
-sub entry_count     { int @{$_[0]->{'entry'}} }
-sub has_entry       { (is_entry( $_[1]) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
-sub get_entry_by_pos{
-    my ($self, $pos) = @_;
-    $pos = $self->_resolve_position( $pos );
-    $pos ? $self->{'entry'}[ $pos - 1 ] : undef;
+sub set_sorting_order {
+    my ($self, $order, $reverse) = @_;
+    return unless defined $order and $order;
+    $order = $reverse = substr($order, 8) if substr($order, 0, 8) eq 'reverse ';
+    $order = lc $order;
+    return unless $order eq 'position' or App::Goto::Dir::Data::Entry::is_property($order);
+    $order = 'reverse '.$order if defined $reverse and $reverse;
+    $self->{'sorting_order'} = $order;
+}
+sub reverse_sorting_order {
+    my ($self) = @_;
+    $self->{'sorting_order'} = (substr($self->{'sorting_order'}, 0, 8) eq 'reverse ')
+                             ? substr($self->{'sorting_order'}, 8)
+                             : 'reverse '.$self->{'sorting_order'};
 }
 
-#### entry position API ########################################################
+#### entry API #################################################################
+sub all_entries     { @{$_[0]->{'entry'}} } #                        --> @.entry
+sub entry_count     { int @{$_[0]->{'entry'}} } #                    --> +
+sub has_entry       { (is_entry( $_[1]) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
 
-sub is_position     {
+sub is_position     { #                           +pos -- +add_range --> ?
     my ($self, $pos, $add_range) = @_;
     $self->resolve_position( $pos, $add_range ) ? 1 : 0;
 }
-
-sub nearest_position {
+sub nearest_position { #                          +pos -- +add_range --> +pos
     my ($self, $pos, $add_range) = @_; # third arg lets sub assume count
     my $max = $self->entry_count + ( $add_range // 0);
     return 0 unless $max;
@@ -77,20 +82,23 @@ sub nearest_position {
     $pos = $max + 1 - $pos if $pos < 0;
     return ($pos > $max) ? $max : $pos;
 }
+sub get_entry_from_position { #                                 +pos --> |.entry
+    my ($self, $pos) = @_;
+    $pos = $self->_resolve_position( $pos );
+    $pos ? $self->{'entry'}[ $pos - 1 ] : undef;
+}
 
-#### entry position API ########################################################
-sub insert_entry {
+sub insert_entry { #                                  .entry -- +pos --> ?.entry
     my ($self, $entry, $pos) = @_;
-    return unless $self->is_entry( $entry);
-    return if $entry->is_in_list( $self->name );
+    return unless is_entry( $entry );
+    return if $self->has_entry( $entry );
     $pos = $self->nearest_position( $pos // -1, 1 );
-    $entry->list_pos->add_list( $self->name );
+    $entry->list_pos->add_set( $self->name );
     splice @{$self->{'entry'}}, $pos-1, 0, $entry;
     $self->_refresh_list_pos( );
     $entry;
 }
-
-sub remove_entry {
+sub remove_entry { #                                     .entry|+pos --> ?.entry
     my ($self, $ID) = @_; # ID = pos or entry objecty
     if ($self->is_entry( $ID )) {
         return unless $self->has_entry( $ID );
@@ -105,21 +113,37 @@ sub remove_entry {
     $entry;
 }
 
-sub report {
-    my ($self, $sort_order, $reverse, $columns) = @_;
-    my $report = ' - entries of list '.$self->name." :\n";
-    my @order = 1 .. $self->entry_count;
-    if ( App::Goto::Dir::Data::Entry::is_property( $sort_order ) ){
-        if ( App::Goto::Dir::Data::Entry::is_numeric_property( $sort_order) ){
-            @order = sort {$self->{'entry'}[$a-1] <=> $self->{'entry'}[$b-1]} @order;
-        } else {
-            @order = sort {$self->{'entry'}[$a-1] cmp $self->{'entry'}[$b-1]} @order;
-        }
+#### apply filter and sorting ##########################################
+sub processed_entries { #                                            --> @.entry
+    my ($self) = @_;
+    my @entries = $self->all_entries;
+    my $order = $self->{'sorting_order'};
+    my $reverse = 0;
+    if (substr($order, 0, 8) eq 'reverse ') {
+        $reverse = 1;
+        $order = substr( $order, 8 );
     }
-    @order = reverse @order if defined $reverse and $reverse;
-    for my $i (@order){
-        my $entry = $self->{'entry'}[$i-1];
-        $report .= sprintf "  [%02u]  %6s  %s\n", $i, $entry->name, $entry->dir;
+    if ($self->{'sorting_order'} ne 'position') {
+        my $property = $self->{'sorting_order'};
+        @entries = sort { $a->cmp_property($property, $b) } @entries;
+    }
+    @entries = reverse @entries if $reverse;
+    for my $filter ( $self->all_filter ) {
+        my $mode = $filter->list_modes->get_in( $self->name );
+        if    ($mode eq 'o') { @entries = grep {$filter->accept_entry($_) } @entries }
+        elsif ($mode eq 'x') { @entries = grep {!$filter->accept_entry($_) } @entries }
+    }
+    return @entries;
+}
+
+sub report {
+    my ($self) = @_;
+    my @entries = $self->processed_entries;
+    my $report = ' - entries of list '.$self->name." :\n";
+
+    my $pos = 1;
+    for my $entry (@entries) {
+        $report .= sprintf "  [%02u]  %6s  %s\n", $pos++, $entry->name, $entry->dir;
     }
     $report
 }
@@ -147,18 +171,6 @@ sub _resolve_position     {
 1;
 
 __END__
-
-sub all_entries      {}    #                      --> @.entry
-sub entry_count      {}    #                      --> +
-sub is_position      {}    #                 +pos --> ?
-sub nearest_position {}    #                 +pos --> +pos
-sub has_entry        {}    #               .entry --> ?
-sub get_entry_by_pos {}    #                 +pos --> ?.entry
-sub add_entry        {}    #       .entry -- +pos --> ?.entry
-sub remove_entry     {}    #                 +pos --> ?.entry
-
-sub get_order        {}    #                      --> ~order
-sub set_order        {}    # ~order               --> ?~order
 sub processed_entries{}    #                      --> @.entry           # filtered and ordered
 sub report           {}    #                      --> ~report
 
@@ -169,7 +181,7 @@ sub get_filter_mode  {}    #  ~filter_name        --> ?~mode            # := - i
 sub set_filter_mode  {}    #  ~filter_name, ~mode --> ?~mode            #    x eXclude
                                                                         #    o pass (OK)
                                                                         #    m mark                                                                      #    m mark
-sub get_entry_by_property {
+sub get_entry_from_property {
     my ($self, $property, $value) = @_;
     return $self->get_entry_by_pos($value) if defined $property and $property eq 'pos' and defined $value;
     return unless App::Goto::Dir::Data::Entry::is_property( $property ) and defined $value;

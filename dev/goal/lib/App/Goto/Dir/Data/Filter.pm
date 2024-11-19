@@ -13,8 +13,8 @@ sub name          {} #                   --> ~name
 sub description   {} #                   --> ~description
 sub list_modes    {} #                   --> .::ValueType::Relations
 
-sub rename        {} #             ~name --> ~name
-sub redescribe    {} #      ~description --> ~description
+sub rename        {} #             ~name --> |~name
+sub redescribe    {} #      ~description --> |~description
 
 sub accept_entry  {} #            .entry --> ?
 sub report        {} #                   --> ~report

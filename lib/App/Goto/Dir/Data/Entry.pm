@@ -92,11 +92,11 @@ sub get_property  {
     $cmp_value->{ $property }->( $self ) if is_property( $property );
 }
 sub cmp_property {
-    my ($self, $property, $cell) = @_;
-    return unless is_property( $property ) and ref $cell eq __PACKAGE__;
+    my ($self, $property, $entry2) = @_;
+    return unless is_property( $property ) and ref $entry2 eq __PACKAGE__;
     $property_is_numeric->{$property}
-        ? ($self->get_property( $property ) <=> $cell->get_property( $property ))
-        : ($self->get_property( $property ) cmp $cell->get_property( $property ));
+        ? ($self->get_property( $property ) <=> $entry2->get_property( $property ))
+        : ($self->get_property( $property ) cmp $entry2->get_property( $property ));
 }
 #### end ###############################################################
 1;
