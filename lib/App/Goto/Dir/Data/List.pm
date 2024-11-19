@@ -1,7 +1,7 @@
 
-# list of dir entries, handles their positions
+# list of dir entries, handles their positions, index: 1 .. count
 
-package App::Goto::Dir::Data::List;   # index: 1 .. count
+package App::Goto::Dir::Data::List;
 use v5.20;
 use warnings;
 use App::Goto::Dir::Data::Entry;
@@ -12,28 +12,30 @@ my $filter_class = 'App::Goto::Dir::Data::Filter';
 
 #### constructor, object life cycle ############################################
 sub new { #           ~name ~decription, @.entry, @.filter -- ~order --> .list
-    my ($pkg, $name, $description, $entries, $filter, $order) = @_;
+    my ($pkg, $name, $description, $entries, $filter, $sorting_order) = @_;
     return 'need 4 arguments: name, description, list entries and list of filter, ordering name is optional'
          if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY' or not $name or not $description;
 
-    my @entries =                       grep { _is_entry( $_ ) } @$entries;
-    my %filter = map { $_->name => $_ } grep { _is_filter( $_ ) } @$filter;
+    my @entries = grep { _is_entry( $_ ) } @$entries;
+    my @filter = grep { _is_filter( $_ ) } @$filter;
     my $self = bless { name => $name, description => $description,
-                       entry => \@entries, filter => \%filter, sorting_order => 'position' };
+                       entry => \@entries, filter => {}, sorting_order => 'position' };
     $self->_refresh_list_pos;
-    $self->set_sorting_order( $order );
+    $self->set_sorting_order( $sorting_order );
+    $self->add_filter( $_ ) for @filter;
     $self;
 }
 
 sub restate {
     my ($pkg, $state, $entries, $filter) = @_;
-    App::Goto::Dir::Data::List->new( $state->{'name'}, $state->{'description'},
-                                     $entries, $filter, $state->{'order'}      );
+    bless { $state->{'name'}, $state->{'description'}, sorting_order => $state->{'sorting_order'},
+            entries => $entries, filter => { map {$_->name => $_} @$filter } };
 }
-sub state   { return { name => $_[0]->{'name'}, description => $_[0]->{'description'}, order => $_[0]->{'order'} }}
+sub state   { return { name => $_[0]->{'name'}, description => $_[0]->{'description'},
+                       sorting_order => $_[0]->{'sorting_order'} } }
 sub destroy {
     my ($self) = @_;
-    $_->list_pos->remove_list( $self->name ) for $self->all_entries;
+    $_->list_positions->remove_list( $self->name ) for $self->all_entries;
     return 1;                      # object can be discarded by holder if return is positive
 }
 
@@ -93,7 +95,7 @@ sub insert_entry { #                                  .entry -- +pos --> ?.entry
     return unless is_entry( $entry );
     return if $self->has_entry( $entry );
     $pos = $self->nearest_position( $pos // -1, 1 );
-    $entry->list_pos->add_set( $self->name );
+    $entry->list_positions->add_set( $self->name );
     splice @{$self->{'entry'}}, $pos-1, 0, $entry;
     $self->_refresh_list_pos( );
     $entry;
@@ -102,50 +104,15 @@ sub remove_entry { #                                     .entry|+pos --> ?.entry
     my ($self, $ID) = @_; # ID = pos or entry objecty
     if ($self->is_entry( $ID )) {
         return unless $self->has_entry( $ID );
-        $ID = $ID->list_pos->get( $self->name );
+        $ID = $ID->list_positions->get( $self->name );
     }
     return unless $self->is_position( $ID );
     my $pos = $self->resolve_position( $ID );
     my $entry = splice @{$self->{'entry'}}, $pos-1, 1;
     return unless $self->is_entry( $entry );
-    $entry->list_pos->remove_list( $self->name );
+    $entry->list_positions->remove_list( $self->name );
     $self->_refresh_list_pos( );
     $entry;
-}
-
-#### apply filter and sorting ##########################################
-sub processed_entries { #                                            --> @.entry
-    my ($self) = @_;
-    my @entries = $self->all_entries;
-    my $order = $self->{'sorting_order'};
-    my $reverse = 0;
-    if (substr($order, 0, 8) eq 'reverse ') {
-        $reverse = 1;
-        $order = substr( $order, 8 );
-    }
-    if ($self->{'sorting_order'} ne 'position') {
-        my $property = $self->{'sorting_order'};
-        @entries = sort { $a->cmp_property($property, $b) } @entries;
-    }
-    @entries = reverse @entries if $reverse;
-    for my $filter ( $self->all_filter ) {
-        my $mode = $filter->list_modes->get_in( $self->name );
-        if    ($mode eq 'o') { @entries = grep {$filter->accept_entry($_) } @entries }
-        elsif ($mode eq 'x') { @entries = grep {!$filter->accept_entry($_) } @entries }
-    }
-    return @entries;
-}
-
-sub report {
-    my ($self) = @_;
-    my @entries = $self->processed_entries;
-    my $report = ' - entries of list '.$self->name." :\n";
-
-    my $pos = 1;
-    for my $entry (@entries) {
-        $report .= sprintf "  [%02u]  %6s  %s\n", $pos++, $entry->name, $entry->dir;
-    }
-    $report
 }
 
 #### filter API #################################################################
@@ -176,12 +143,49 @@ sub set_filter_mode {                         #  ~filter_name, ~mode --> ?~mode
     $self->{'filter'}{ $filter_name }->list_modes->set_in( $self->{'name'}, $mode );
 }
 
+#### apply filter and sorting ##########################################
+sub processed_entries { #                                            --> @.entry
+    my ($self) = @_;
+    my @entries = $self->all_entries;
+    my $order = $self->{'sorting_order'};
+    my $reverse = 0;
+    if (substr($order, 0, 8) eq 'reverse ') {
+        $reverse = 1;
+        $order = substr( $order, 8 );
+    }
+    if ($self->{'sorting_order'} ne 'position') {
+        my $property = $self->{'sorting_order'};
+        @entries = sort { $a->cmp_property($property, $b) } @entries;
+    }
+    @entries = reverse @entries if $reverse;
+    for my $filter ( $self->all_filter ) {
+        my $mode = $filter->list_modes->get_in( $self->name );
+        if    ($mode eq 'o') { @entries = grep {$filter->accept_entry($_) } @entries }
+        elsif ($mode eq 'x') { @entries = grep {!$filter->accept_entry($_) } @entries }
+    }
+    return @entries;
+}
+
+sub report {
+    my ($self, $width) = @_;
+    $width //= 80;
+    my @entries = $self->processed_entries;
+    my $report = ' - entries of list '.$self->name.' sorted by '.$self->sorting_order.":\n";
+
+    for my $entry (@entries) {
+        my $pos = $entry->list_positions->get_in( $self->name );
+        my $row = sprintf "  [%02u]  %6s  %s\n", $pos, $entry->name, $entry->dir;
+        $report .= substr $row, 0, $width;
+    }
+    return $report;
+}
+
 ##### helper ###########################################################
 sub _is_entry  { (ref $_[0] eq $entry_class) ? 1 : 0 }
 sub _is_filter { (ref $_[0] eq $filter_class) ? 1 : 0 }
 sub _refresh_list_pos {
     my ($self) = @_;
-    $self->{'entry'}[$_-1]->list_pos->set_in( $self->name, $_ ) for 1 .. $self->entry_count;
+    $self->{'entry'}[$_-1]->list_positions->set_in( $self->name, $_ ) for 1 .. $self->entry_count;
 }
 sub _resolve_position     {
     my ($self, $pos, $add_range) = @_;
@@ -190,7 +194,7 @@ sub _resolve_position     {
     return 0 unless $pos <= $max and $pos >= (- $max);
     $pos > 0 ? $pos : ( $max + 1 - $pos);
 }
-sub _is_filter_mode { (defined $_[0] and ($_[0] eq '-' or $_[0] eq 'x' or $_[0] eq 'o' or $_[0] eq 'm')) ? 1 : 0 }
+sub _is_filter_mode { (defined $_[0] and ($_[0] eq 'i' or $_[0] eq 'x' or $_[0] eq 'o' or $_[0] eq 'm')) ? 1 : 0 }
 
 #### end ###############################################################
 
