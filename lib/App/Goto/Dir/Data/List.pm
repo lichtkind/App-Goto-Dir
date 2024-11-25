@@ -19,9 +19,10 @@ sub new { #           ~name ~decription, @.entry, @.filter -- ~order --> .list
     my @entries = grep { _is_entry( $_ ) } @$entries;
     my @filter = grep { _is_filter( $_ ) } @$filter;
     my $self = bless { name => $name, description => $description,
-                       entry => \@entries, filter => {}, sorting_order => 'position' };
+                       entry => [], filter => {}, sorting_order => 'position' };
     $self->_refresh_list_pos;
     $self->set_sorting_order( $sorting_order );
+    $self->insert_entry( $_ ) for @entries;
     $self->add_filter( $_ ) for @filter;
     $self;
 }
@@ -70,7 +71,7 @@ sub reverse_sorting_order {
 #### entry API #################################################################
 sub all_entries     { @{$_[0]->{'entry'}} } #                        --> @.entry
 sub entry_count     { int @{$_[0]->{'entry'}} } #                    --> +
-sub has_entry       { (is_entry( $_[1]) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
+sub has_entry       { (_is_entry( $_[1]) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
 
 sub is_position     { #                           +pos -- +add_range --> ?
     my ($self, $pos, $add_range) = @_;
@@ -92,7 +93,7 @@ sub get_entry_from_position { #                                 +pos --> |.entry
 
 sub insert_entry { #                                  .entry -- +pos --> ?.entry
     my ($self, $entry, $pos) = @_;
-    return unless is_entry( $entry );
+    return unless _is_entry( $entry );
     return if $self->has_entry( $entry );
     $pos = $self->nearest_position( $pos // -1, 1 );
     $entry->list_positions->add_set( $self->name );
@@ -102,14 +103,14 @@ sub insert_entry { #                                  .entry -- +pos --> ?.entry
 }
 sub remove_entry { #                                     .entry|+pos --> ?.entry
     my ($self, $ID) = @_; # ID = pos or entry objecty
-    if ($self->is_entry( $ID )) {
+    if (_is_entry( $ID )) {
         return unless $self->has_entry( $ID );
         $ID = $ID->list_positions->get( $self->name );
     }
     return unless $self->is_position( $ID );
     my $pos = $self->resolve_position( $ID );
     my $entry = splice @{$self->{'entry'}}, $pos-1, 1;
-    return unless $self->is_entry( $entry );
+    return unless _is_entry( $entry );
     $entry->list_positions->remove_list( $self->name );
     $self->_refresh_list_pos( );
     $entry;
