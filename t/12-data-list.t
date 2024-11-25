@@ -2,11 +2,20 @@
 use v5.18;
 use warnings;
 use Test::More tests => 84;
+use FindBin qw( $RealBin );
+use File::Spec;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
 my $class = 'App::Goto::Dir::Data::List';
 use_ok( $class );
+
+my ($volume, $directories, $file) = File::Spec->splitpath( $RealBin );
+my @dir_part = grep {$_} File::Spec->splitdir( $directories );
+my $path = '';
+my @dir = map {$path = File::Spec->catdir( $path, $_ ); $path } @dir_part;
+my $nr = 1;
+my @entry = map { App::Goto::Dir::Data::Entry->new( $_, $nr++ ) } @dir;
 
 
 exit 0;

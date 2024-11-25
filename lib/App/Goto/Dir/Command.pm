@@ -7,6 +7,8 @@ use warnings;
 no warnings  qw/experimental::smartmatch/;
 use feature qw/switch/;
 use File::Spec;
+use App::Goto::Dir::Data;
+use App::Goto::Dir::Help;
 
 my %special_entry = ( last => 'entry last visited',
                       prev => 'entry second last visited',

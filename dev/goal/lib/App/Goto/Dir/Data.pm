@@ -8,26 +8,27 @@ use App::Goto::Dir::Data::Entry;
 use App::Goto::Dir::Data::Filter;
 use App::Goto::Dir::Data::List;
 
-sub new { }   # %data, %config --> .
-sub state {}  #                --> %data
-# sub restate {}
+sub new { }   #                          --> .
+sub state {}  #                          --> %data
+sub restate {} #                  %data  --> .
 
-sub get_current_list_name {}  #                                          --> ~list_name
-sub set_current_list_name {}  #  ~list_name                              --> ?
+sub get_current_list_name {}  #                                         --> ~list_name
+sub set_current_list_name {}  #  ~lname                                 --> ?~list_name
 
-sub create_list {}            #  ~list_name -- ~list_description         --> .list
-sub delete_list {}            #  ~list_name                              --> ?
-sub get_list {}               #             -- ~list_name                --> .list
-sub get_list_names {}         #                                          --> @~list_name
+sub create_list {}            #  ~lname -- ~ldescription                --> .list
+sub delete_list {}            #  ~lname                                 --> ?.list
+sub get_list {}               #         -- ~lname                       --> .list
+sub get_list_names {}         #                                         --> @~list_name
+sub list_report {}            #         -- +width                       --> ~report
 
-sub create_filter {}          #  ~code, ~filter_name -- ~filter_descrip. --> .filter
-sub delete_filter {}          #  ~filter_name                            --> ?
-sub get_filter {}             #  ~filter_name                            --> .filter
-sub get_filter_names {}       #                                          --> @~filter_name
+sub create_filter {}          #  ~fname, ~fdescription, ~fcode, %lmodes --> .filter
+sub delete_filter {}          #  ~fname                                 --> ?
+sub get_filter {}             #  ~fname                                 --> .filter
+sub get_filter_names {}       #                                         --> @~fname
 
-sub create_entry {}           #  ~dir -- ~entry_name, ~entry_description --> .entry
-sub delete_entry {}           #  ~entry_name                             --> ?
-sub get_entry {}              #  ~entry_name                             --> .entry
-sub get_entry_names {}        #                                          --> @~entry_name
+sub create_entry {}           #  ~dir -- ~ename, ~edescription          --> .entry
+sub delete_entry {}           #  ~ename                                 --> ?
+sub get_entry {}              #  ~ename                                 --> .entry
+sub all_entry_names {}        #                                         --> @~ename
 
 1;
