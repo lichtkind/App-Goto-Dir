@@ -36,7 +36,7 @@ sub state   { return { name => $_[0]->{'name'}, description => $_[0]->{'descript
                        sorting_order => $_[0]->{'sorting_order'} } }
 sub destroy {
     my ($self) = @_;
-    $_->list_positions->remove_list( $self->name ) for $self->all_entries;
+    $_->list_positions->remove_set( $self->name ) for $self->all_entries;
     return 1;                      # object can be discarded by holder if return is positive
 }
 
@@ -75,14 +75,15 @@ sub has_entry       { (_is_entry( $_[1]) and $_[1]->is_in_list( $_[0]->name )) ?
 
 sub is_position     { #                           +pos -- +add_range --> ?
     my ($self, $pos, $add_range) = @_;
-    $self->resolve_position( $pos, $add_range ) ? 1 : 0;
+    $self->_resolve_position( $pos, $add_range ) ? 1 : 0;
 }
 sub nearest_position { #                          +pos -- +add_range --> +pos
     my ($self, $pos, $add_range) = @_; # third arg lets sub assume count
     my $max = $self->entry_count + ( $add_range // 0);
     return 0 unless $max;
     return 1 unless defined $pos and $pos;
-    $pos = $max + 1 - $pos if $pos < 0;
+    $pos = $max + 1 + $pos if $pos < 0;
+    return 1 unless $pos > 0;
     return ($pos > $max) ? $max : $pos;
 }
 sub get_entry_from_position { #                                 +pos --> |.entry
@@ -105,13 +106,13 @@ sub remove_entry { #                                     .entry|+pos --> ?.entry
     my ($self, $ID) = @_; # ID = pos or entry objecty
     if (_is_entry( $ID )) {
         return unless $self->has_entry( $ID );
-        $ID = $ID->list_positions->get( $self->name );
+        $ID = $ID->list_positions->get_in( $self->name );
     }
     return unless $self->is_position( $ID );
-    my $pos = $self->resolve_position( $ID );
+    my $pos = $self->_resolve_position( $ID );
     my $entry = splice @{$self->{'entry'}}, $pos-1, 1;
     return unless _is_entry( $entry );
-    $entry->list_positions->remove_list( $self->name );
+    $entry->list_positions->remove_set( $self->name );
     $self->_refresh_list_pos( );
     $entry;
 }
