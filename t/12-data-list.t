@@ -16,7 +16,6 @@ my $path = '';
 my @dir = map {$path = File::Spec->catdir( $path, $_ ); $path } @dir_part;
 my $nr = 1;
 my @entry = map { App::Goto::Dir::Data::Entry->new( $_, $nr++ ) } @dir;
-my $filter = App::Goto::Dir::Data::Filter->new( 'name', 'description', '$visits > 1', {list_name => 'i'} );
 
 is( ref App::Goto::Dir::Data::List->new(),       '', 'constructor needs arguments');
 is( ref App::Goto::Dir::Data::List->new('name'), '', 'needs more than just a name');
@@ -42,14 +41,14 @@ is( $empty->set_sorting_order('nom'),        undef, 'could not set unknown sorti
 is( $empty->set_sorting_order('reverse pos'), undef, 'could not set unknown sorting order in reverse');
 is( $empty->set_sorting_order('rev position'), undef, 'could not use unknown sorting order prefix');
 is( $empty->entry_count, 0, 'list is empty');
-is( int( $empty->all_filter ), 0, 'list has no filter');
+is( $empty->all_filter_names,                  undef, 'list has no filter');
 
 
 my $four = App::Goto::Dir::Data::List->new('name', 'description', [@entry[0..3]], [], 'name');
-is( ref $four,                             $class, 'four element list created');
+is( ref $four,                             $class, 'created list with four elements');
 is( $four->sorting_order,                  'name', 'got default sorting order given by constructor');
 is( $four->entry_count,                         4, 'list has four elements');
-is( int( $four->all_filter ),                   0, 'list has no filter');
+is( $four->all_filter_names,                undef, 'list has no filter');
 my @all_e = $four->all_entries;
 is( int @all_e,                                 4, 'got all elements by method all_entries');
 is( $four->has_entry( $all_e[0] ),              1, 'first element is in list');
@@ -99,6 +98,18 @@ is( $all_e[3]->list_positions->get_in('name'),  3, 'fourth is now third element'
 is( $four->remove_entry( $all_e[1] ),   $all_e[1], 'removed element by ref');
 is( $four->entry_count,                         3, 'list again has only three elements');
 is( $four->get_entry_from_position(1),  $all_e[2], 'got correctly new first element');
+
+
+my $filter_visit = App::Goto::Dir::Data::Filter->new( '$visits > 1', 'visits', 'description' );
+my $filter_name = App::Goto::Dir::Data::Filter->new( '$name > 2', 'name', 'description' );
+my $filter_list = App::Goto::Dir::Data::List->new('list:name', 'description', [@entry[0..3]], [$filter_visit, $filter_name]);
+is( ref $filter_list,                      $class, 'created list with two filters');
+my @filter_names = $filter_list->all_filter_names;
+is( @filter_names,                             2, 'both filters are known to the list');
+is( $filter_names[0],                     'name', 'first filters name is "name"');
+is( $filter_names[1],                   'visits', 'second filters name is "visits"');
+is( $filter_list->get_filter_mode('name'),   '-', 'filter mode of filter "name" ist on default');
+is( $filter_list->get_filter_mode('visits'), '-', 'filter mode of filter "visits" ist on default');
 
 
 exit 0;

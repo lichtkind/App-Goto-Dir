@@ -9,10 +9,10 @@ my $class = 'App::Goto::Dir::Data::Filter';
 use_ok( $class );
 
 my $entry = App::Goto::Dir::Data::Entry->new( $ENV{'HOME'} );
-my $filter = App::Goto::Dir::Data::Filter->new( 'name', 'description', '$visits > 1', {list => 'm'} );
+my $filter = App::Goto::Dir::Data::Filter->new( '$visits > 1', 'name', 'description' );
 is( ref $filter,                  $class,          'created filter object');
 is( ref $filter->list_modes,  'App::Goto::Dir::Data::ValueType::Relations',          'list modes are relations');
-is( $filter->list_modes->get_in('list'),   'm',    'list modes arrived from constructor');
+is( $filter->list_modes->get_in('list'),  0,       'no list modes set yet');
 is( $filter->name,                'name',          'filter name set by constructor is correct');
 is( $filter->description,  'description',          'got filter description set by constructor');
 is( $filter->rename('rename'),  'rename',          'new filter name correct');

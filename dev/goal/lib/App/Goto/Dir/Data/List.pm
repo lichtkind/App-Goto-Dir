@@ -27,7 +27,7 @@ sub get_entry_from_position {} #             +pos --> |.entry
 sub add_entry         {}   #       .entry -- +pos --> |.entry
 sub remove_entry      {}   #          .entry|+pos --> |.entry
 
-sub all_filter        {}   #                      --> @.filter
+sub all_filter_names  {}   #                      --> @.filter_name
 sub add_filter        {}   #  .filter,      ~mode --> |.filter
 sub remove_filter     {}   #  ~filter_name        --> |.filter
 sub get_filter_mode   {}   #  ~filter_name        --> |~mode            # i x o m:= Inactive, eXclude, pass (OK), mark (with |)

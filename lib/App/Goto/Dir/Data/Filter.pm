@@ -10,16 +10,16 @@ use App::Goto::Dir::Data::Entry;
 my $entry_class = 'App::Goto::Dir::Data::Entry';
 
 #### constructor, object life cycle ############################################
-sub new {  #                              ~name, ~description, ~code, %list_modes --> .filter
-    my ($pkg, $name, $description, $code, $modes) = @_;
-    return 'need 4 arguments: name, description, code and filter mode hash'
-         unless defined $modes and $name and $description and $code and ref $modes eq 'HASH';
+sub new {  #                              ~name, ~description, ~code --> .filter
+    my ($pkg, $code, $name, $description) = @_;
+    return 'need 3 arguments: code and name, and a description'
+         unless defined $description and $description and $name and $code;
     my $full_code = _complete_code( $code );
     return "filter $name got bad code: $code" unless $full_code;
     my $ref = eval $full_code;
     return "filter $name got bad code: $full_code: $@" if $@;   # smoke test
     bless { name => $name, description => $description, code => $full_code, ref => $ref,
-           modes => App::Goto::Dir::Data::ValueType::Relations->restate( $modes ), };
+           modes => App::Goto::Dir::Data::ValueType::Relations->new(), };
 }
 sub restate {
     my ($pkg, $state) = @_;

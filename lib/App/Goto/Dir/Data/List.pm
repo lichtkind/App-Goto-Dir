@@ -46,7 +46,11 @@ sub rename            {
     my ($self, $new_name) = @_;
     my $old_name = $self->name;
     return unless defined $new_name and $new_name and $new_name ne $old_name;
-    $_->add_set( $new_name, $_->remove_set( $old_name ) ) for $self->all_entries, $self->all_filter;
+    map {$_->add_set( $new_name, $_->remove_set( $old_name ) )}
+        map {$_->list_positions} $self->all_entries;
+    map {$_->add_set( $new_name, $_->remove_set( $old_name ) )}
+        map {$self->{'filter'}{$_}->list_modes} $self->all_filter_names;
+
     $self->{'name'} = $new_name;
 }
 sub description       { $_[0]->{'description'} }
@@ -118,7 +122,7 @@ sub remove_entry { #                                     .entry|+pos --> ?.entry
 }
 
 #### filter API #################################################################
-sub all_filter { values %{$_[0]->{'filter'}} }       #                      --> @.filter
+sub all_filter_names { sort keys %{$_[0]->{'filter'}} } #            --> @.filter_name
 sub add_filter {                              #  .filter,      ~mode --> ?.filter
     my ($self, $filter, $mode) = @_;
     return 'argument is no filter class' unless _is_filter( $filter );
