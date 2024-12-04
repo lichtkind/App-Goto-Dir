@@ -128,7 +128,7 @@ sub add_filter {                              #  .filter,      ~mode --> ?.filte
     return 'argument is no filter class' unless _is_filter( $filter );
     return 'filter '.$filter->name.'is already added' if exists $self->{'filter'}{ $filter->name };
     $self->{'filter'}{ $filter->name } = $filter;
-    $mode = '-' unless defined $mode and _is_filter_mode( $mode);     # default is inactive
+    $mode = '-' unless _is_filter_mode( $mode);     # default mode of a filter sis inactive
     $filter->list_modes->add_set( $self->{'name'}, $mode );
     $filter;
 }

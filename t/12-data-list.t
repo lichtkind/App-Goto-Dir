@@ -1,13 +1,14 @@
 #!/usr/bin/perl -w
 use v5.18;
 use warnings;
-use Test::More tests => 84;
+use Test::More tests => 120;
 use FindBin qw( $RealBin );
 use File::Spec;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
 my $class = 'App::Goto::Dir::Data::List';
+my $filter_class = 'App::Goto::Dir::Data::Filter';
 use_ok( $class );
 
 my ($volume, $directories, $file) = File::Spec->splitpath( $RealBin );
@@ -17,12 +18,12 @@ my @dir = map {$path = File::Spec->catdir( $path, $_ ); $path } @dir_part;
 my $nr = 1;
 my @entry = map { App::Goto::Dir::Data::Entry->new( $_, $nr++ ) } @dir;
 
-is( ref App::Goto::Dir::Data::List->new(),       '', 'constructor needs arguments');
-is( ref App::Goto::Dir::Data::List->new('name'), '', 'needs more than just a name');
-is( ref App::Goto::Dir::Data::List->new('name', 'description'), '', 'and a description');
+is( ref App::Goto::Dir::Data::List->new(),                          '', 'constructor needs arguments');
+is( ref App::Goto::Dir::Data::List->new('name'),                    '', 'needs more than just a name');
+is( ref App::Goto::Dir::Data::List->new('name', 'description'),     '', 'and a description');
 is( ref App::Goto::Dir::Data::List->new('name', 'description', []), '', 'and and empty element list');
 is( ref App::Goto::Dir::Data::List->new('', 'description', [], []), '', 'need an actual name');
-is( ref App::Goto::Dir::Data::List->new('name', '', [], []), '', 'need an actual description');
+is( ref App::Goto::Dir::Data::List->new('name', '', [], []),        '', 'need an actual description');
 
 my $empty = App::Goto::Dir::Data::List->new('name', 'description', [], []);
 is( ref $empty,                             $class, 'four arguments are enough, even if no entries and no filter');
@@ -92,7 +93,7 @@ is( $four->entry_count,                         4, 'list has four elements again
 is( $four->insert_entry($all_e[0]),         undef, 'can no insert element twice');
 is( $four->entry_count,                         4, 'list still has four elements');
 is( $all_e[0]->list_positions->get_in('name'),  4, 'first is now last element');
-is( $all_e[1]->list_positions->get_in('name'),  1, 'second is now first element');
+is( $all_e[1]->list_positions->get_in('name'),  1, 'former second is now first element');
 is( $all_e[2]->list_positions->get_in('name'),  2, 'third is now second element');
 is( $all_e[3]->list_positions->get_in('name'),  3, 'fourth is now third element');
 is( $four->remove_entry( $all_e[1] ),   $all_e[1], 'removed element by ref');
@@ -105,11 +106,25 @@ my $filter_name = App::Goto::Dir::Data::Filter->new( '$name > 2', 'name', 'descr
 my $filter_list = App::Goto::Dir::Data::List->new('list:name', 'description', [@entry[0..3]], [$filter_visit, $filter_name]);
 is( ref $filter_list,                      $class, 'created list with two filters');
 my @filter_names = $filter_list->all_filter_names;
-is( @filter_names,                             2, 'both filters are known to the list');
-is( $filter_names[0],                     'name', 'first filters name is "name"');
-is( $filter_names[1],                   'visits', 'second filters name is "visits"');
-is( $filter_list->get_filter_mode('name'),   '-', 'filter mode of filter "name" ist on default');
-is( $filter_list->get_filter_mode('visits'), '-', 'filter mode of filter "visits" ist on default');
+is( @filter_names,                               2, 'both filters are known to the list');
+is( $filter_names[0],                       'name', 'first filters name is "name"');
+is( $filter_names[1],                     'visits', 'second filters name is "visits"');
+is( $filter_list->get_filter_mode('name'),     '-', 'filter mode of filter "name" ist on default');
+is( $filter_list->get_filter_mode('visits'),   '-', 'filter mode of filter "visits" ist on default');
+is( $filter_list->set_filter_mode('name','m'), 'm', 'could set filter mode of filter "name" to m');
+is( $filter_list->set_filter_mode('visits','x'),'x','could set filter mode of filter "visits" to x');
+is( $filter_list->get_filter_mode('name'),     'm', 'got new filter mode of filter "name"');
+is( $filter_list->get_filter_mode('visits'),   'x', 'got new filter mode of filter "visits"');
+is( $filter_list->get_filter_mode('not'),    undef, 'none existant filter has no mode');
+is( $filter_list->remove_filter('not'),      undef, 'could not remove not existantant filter');
+my $name_filter = $filter_list->remove_filter('name');
+is( ref $name_filter,                $filter_class, 'could not remove filter "nam"');
+is( $filter_list->get_filter_mode('nname'),  undef, 'filter name was removed');
+my @filter_names = $filter_list->all_filter_names;
+is( @filter_names,                               1, 'only one filter name is known');
+is( $filter_names[0],                     'visits', 'the right filter was kept');
+is( ref $filter_list->add_filter($name_filter, 'i'),  $filter_class, 'could add filter "name"');
+is( $filter_list->get_filter_mode('name'),     'i', 'got filter mode of filter "name" set by add method');
 
 
 exit 0;
