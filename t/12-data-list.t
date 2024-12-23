@@ -26,7 +26,7 @@ is( ref App::Goto::Dir::Data::List->new('', 'description', [], []), '', 'need an
 is( ref App::Goto::Dir::Data::List->new('name', '', [], []),        '', 'need an actual description');
 
 my $empty = App::Goto::Dir::Data::List->new('name', 'description', [], []);
-is( ref $empty,                             $class, 'four arguments are enough, even if no entries and no filter');
+is( ref $empty,                             $class, 'created list with four arguments but no entries and no filter');
 is( $empty->name,                           'name', 'got list name given via description');
 is( $empty->rename('rename'),             'rename', 'changed list name');
 is( $empty->name,                         'rename', 'got new list name');
@@ -41,15 +41,18 @@ is( $empty->reverse_sorting_order,           'dir', 'reversed custom sorting ord
 is( $empty->set_sorting_order('nom'),        undef, 'could not set unknown sorting order');
 is( $empty->set_sorting_order('reverse pos'), undef, 'could not set unknown sorting order in reverse');
 is( $empty->set_sorting_order('rev position'), undef, 'could not use unknown sorting order prefix');
-is( $empty->entry_count, 0, 'list is empty');
-is( $empty->all_filter_names,                  undef, 'list has no filter');
+is( $empty->entry_count,                           0, 'list is empty');
+is( $empty->all_entries,                           0, 'list has no entries');
+is( $empty->all_filter,                        undef, 'list has no filters');
+is( $empty->has_entry('1'),                        0, 'specific named entry unknown');
+is( $empty->has_filter('name'),                    0, 'specific named filter unknown');
 
 
 my $four = App::Goto::Dir::Data::List->new('name', 'description', [@entry[0..3]], [], 'name');
 is( ref $four,                             $class, 'created list with four elements');
 is( $four->sorting_order,                  'name', 'got default sorting order given by constructor');
 is( $four->entry_count,                         4, 'list has four elements');
-is( $four->all_filter_names,                undef, 'list has no filter');
+is( $four->all_filter,                      undef, 'list has no filter');
 my @all_e = $four->all_entries;
 is( int @all_e,                                 4, 'got all elements by method all_entries');
 is( $four->has_entry( $all_e[0] ),              1, 'first element is in list');
@@ -105,10 +108,10 @@ my $filter_visit = App::Goto::Dir::Data::Filter->new( '$visits > 1', 'visits', '
 my $filter_name = App::Goto::Dir::Data::Filter->new( '$name > 2', 'name', 'description' );
 my $filter_list = App::Goto::Dir::Data::List->new('list:name', 'description', [@entry[0..3]], [$filter_visit, $filter_name]);
 is( ref $filter_list,                      $class, 'created list with two filters');
-my @filter_names = $filter_list->all_filter_names;
-is( @filter_names,                               2, 'both filters are known to the list');
-is( $filter_names[0],                       'name', 'first filters name is "name"');
-is( $filter_names[1],                     'visits', 'second filters name is "visits"');
+my @filter = $filter_list->all_filter;
+is( @filter,                               2, 'both filters are known to the list');
+is( $filter[0]->name,                       'name', 'first filters name is "name"');
+is( $filter[1]->name,                     'visits', 'second filters name is "visits"');
 is( $filter_list->get_filter_mode('name'),     '-', 'filter mode of filter "name" ist on default');
 is( $filter_list->get_filter_mode('visits'),   '-', 'filter mode of filter "visits" ist on default');
 is( $filter_list->set_filter_mode('name','m'), 'm', 'could set filter mode of filter "name" to m');
@@ -120,11 +123,12 @@ is( $filter_list->remove_filter('not'),      undef, 'could not remove not exista
 my $name_filter = $filter_list->remove_filter('name');
 is( ref $name_filter,                $filter_class, 'could not remove filter "nam"');
 is( $filter_list->get_filter_mode('nname'),  undef, 'filter name was removed');
-my @filter_names = $filter_list->all_filter_names;
-is( @filter_names,                               1, 'only one filter name is known');
-is( $filter_names[0],                     'visits', 'the right filter was kept');
+@filter = $filter_list->all_filter;
+is( @filter,                               1, 'only one filter name is known');
+is( $filter[0]->name,                     'visits', 'the right filter was kept');
 is( ref $filter_list->add_filter($name_filter, 'i'),  $filter_class, 'could add filter "name"');
 is( $filter_list->get_filter_mode('name'),     'i', 'got filter mode of filter "name" set by add method');
 
 
 exit 0;
+

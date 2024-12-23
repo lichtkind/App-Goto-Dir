@@ -16,15 +16,18 @@ sub new { #           ~name ~decription, @.entry, @.filter -- ~order --> .list
     return 'need 4 arguments: name, description, list entries and list of filter, ordering name is optional'
          if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY' or not $name or not $description;
 
-    my @entries = grep { _is_entry( $_ ) } @$entries;
-    my @filter = grep { _is_filter( $_ ) } @$filter;
     my $self = bless { name => $name, description => $description,
                        entry => [], filter => {}, sorting_order => 'position' };
-    $self->_refresh_list_pos;
     $self->set_sorting_order( $sorting_order );
-    $self->insert_entry( $_ ) for @entries;
-    $self->add_filter( $_ ) for @filter;
+    $self->insert_entry( $_ ) for grep { _is_entry( $_ ) } @$entries;
+    $self->add_filter( $_ ) for grep { _is_filter( $_ ) } @$filter;
     $self;
+}
+sub destroy {
+    my ($self) = @_;
+    $_->list_positions->remove_set( $self->name ) for $self->all_entries;
+    $_->list_positions->remove_filter( $self->name ) for $self->add_filter;
+    return 1;                      # object can be discarded by holder if return is positive
 }
 
 sub restate {
@@ -32,12 +35,9 @@ sub restate {
     bless { $state->{'name'}, $state->{'description'}, sorting_order => $state->{'sorting_order'},
             entries => $entries, filter => { map {$_->name => $_} @$filter } };
 }
-sub state   { return { name => $_[0]->{'name'}, description => $_[0]->{'description'},
-                       sorting_order => $_[0]->{'sorting_order'} } }
-sub destroy {
-    my ($self) = @_;
-    $_->list_positions->remove_set( $self->name ) for $self->all_entries;
-    return 1;                      # object can be discarded by holder if return is positive
+sub state   { return { name => $_[0]->{'name'},
+                description => $_[0]->{'description'},
+              sorting_order => $_[0]->{'sorting_order'} }
 }
 
 #### list accessors ############################################################
@@ -46,11 +46,11 @@ sub rename            {
     my ($self, $new_name) = @_;
     my $old_name = $self->name;
     return unless defined $new_name and $new_name and $new_name ne $old_name;
+
     map {$_->add_set( $new_name, $_->remove_set( $old_name ) )}
         map {$_->list_positions} $self->all_entries;
     map {$_->add_set( $new_name, $_->remove_set( $old_name ) )}
-        map {$self->{'filter'}{$_}->list_modes} $self->all_filter_names;
-
+        map {$_->list_modes}     $self->all_filter;
     $self->{'name'} = $new_name;
 }
 sub description       { $_[0]->{'description'} }
@@ -74,7 +74,7 @@ sub reverse_sorting_order {
 
 #### entry API #################################################################
 sub all_entries     { @{$_[0]->{'entry'}} } #                        --> @.entry
-sub entry_count     { int @{$_[0]->{'entry'}} } #                    --> +
+sub entry_count     { int $_[0]->all_entries } #                     --> +
 sub has_entry       { (_is_entry( $_[1]) and $_[1]->is_in_list( $_[0]->name )) ? 1 : 0 }
 
 sub is_position     { #                           +pos -- +add_range --> ?
@@ -96,7 +96,7 @@ sub get_entry_from_position { #                                 +pos --> |.entry
     $pos ? $self->{'entry'}[ $pos - 1 ] : undef;
 }
 
-sub insert_entry { #                                  .entry -- +pos --> ?.entry
+sub insert_entry { #                                  .entry -- +pos --> |.entry
     my ($self, $entry, $pos) = @_;
     return unless _is_entry( $entry );
     return if $self->has_entry( $entry );
@@ -106,7 +106,7 @@ sub insert_entry { #                                  .entry -- +pos --> ?.entry
     $self->_refresh_list_pos( );
     $entry;
 }
-sub remove_entry { #                                     .entry|+pos --> ?.entry
+sub remove_entry { #                                     .entry|+pos --> |.entry
     my ($self, $ID) = @_; # ID = pos or entry objecty
     if (_is_entry( $ID )) {
         return unless $self->has_entry( $ID );
@@ -122,8 +122,9 @@ sub remove_entry { #                                     .entry|+pos --> ?.entry
 }
 
 #### filter API #################################################################
-sub all_filter_names { sort keys %{$_[0]->{'filter'}} } #            --> @.filter_name
-sub add_filter {                              #  .filter,      ~mode --> ?.filter
+sub all_filter { sort {$a->name cmp $b->name} values %{$_[0]->{'filter'}} }  #       --> @.filter
+sub has_filter { (exists $_[0]->{'filter'}{$_[1]}) ? 1 : 0 } #         ~filter_name  --> ?
+sub add_filter {                                             #        .filter, ~mode --> ?.filter
     my ($self, $filter, $mode) = @_;
     return 'argument is no filter class' unless _is_filter( $filter );
     return 'filter '.$filter->name.'is already added' if exists $self->{'filter'}{ $filter->name };
@@ -132,18 +133,18 @@ sub add_filter {                              #  .filter,      ~mode --> ?.filte
     $filter->list_modes->add_set( $self->{'name'}, $mode );
     $filter;
 }
-sub remove_filter {                           #  ~filter_name        --> ?.filter
+sub remove_filter {                           #  ~filter_name        --> |.filter
     my ($self, $filter_name) = @_;
     return unless exists $self->{'filter'}{ $filter_name };
     $self->{'filter'}{ $filter_name }->list_modes->remove_set( $self->{'name'} );
     delete $self->{'filter'}{ $filter_name };
 }
-sub get_filter_mode {                         #  ~filter_name        --> ?~mode
+sub get_filter_mode {                         #  ~filter_name        --> |~mode
     my ($self, $filter_name) = @_;
     return unless exists $self->{'filter'}{ $filter_name };
     $self->{'filter'}{ $filter_name }->list_modes->get_in( $self->{'name'} );
 }
-sub set_filter_mode {                         #  ~filter_name, ~mode --> ?~mode
+sub set_filter_mode {                         #  ~filter_name, ~mode --> |~mode
     my ($self, $filter_name, $mode) = @_;
     return unless exists $self->{'filter'}{ $filter_name } and _is_filter_mode( $mode );
     $self->{'filter'}{ $filter_name }->list_modes->set_in( $self->{'name'}, $mode );

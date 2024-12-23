@@ -18,7 +18,7 @@ sub sorting_order     {}   #                      --> ~order
 sub set_sorting_order {}   #   ~order -- ?reverse --> |~order
 sub reverse_sorting_order{}#                      --> |~order
 
-sub all_entries       {}   #                      --> @.entry
+sub all_entries       {}   #                      --> 0|@.entry
 sub entry_count       {}   #                      --> +
 sub has_entry         {}   #               .entry --> ?
 sub is_position       {}   #   +pos -- +add_range --> ?                 # add_range = 1 -> assume list is one elem longer
@@ -27,7 +27,8 @@ sub get_entry_from_position{}#               +pos --> |.entry
 sub add_entry         {}   #       .entry -- +pos --> |.entry
 sub remove_entry      {}   #          .entry|+pos --> |.entry
 
-sub all_filter_names  {}   #                      --> @.filter_name
+sub all_filter        {}   #                      --> @.filter
+sub has_filter        {}   #  ~filter_name        --> ?
 sub add_filter        {}   #  .filter,      ~mode --> !.filter
 sub remove_filter     {}   #  ~filter_name        --> !.filter
 sub get_filter_mode   {}   #  ~filter_name        --> |~mode            # i x o m:= Inactive, eXclude, pass (OK), mark (with |)
