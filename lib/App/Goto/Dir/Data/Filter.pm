@@ -13,7 +13,8 @@ my $entry_class = 'App::Goto::Dir::Data::Entry';
 sub new {  #                              ~name, ~description, ~code --> .filter
     my ($pkg, $code, $name, $description) = @_;
     return 'need 3 arguments: code and name, and a description'
-         unless defined $description and $description and $name and $code;
+         unless defined $description and not ref $description and $description
+            and not ref $name and $name and not ref $code and $code;
     my $full_code = _complete_code( $code );
     return "filter $name got bad code: $code" unless $full_code;
     my $ref = eval $full_code;
