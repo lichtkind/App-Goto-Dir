@@ -24,6 +24,14 @@ is( ref App::Goto::Dir::Data::List->new('name', 'description'),     '', 'and a d
 is( ref App::Goto::Dir::Data::List->new('name', 'description', []), '', 'and and empty element list');
 is( ref App::Goto::Dir::Data::List->new('', 'description', [], []), '', 'need an actual name');
 is( ref App::Goto::Dir::Data::List->new('name', '', [], []),        '', 'need an actual description');
+is( ref App::Goto::Dir::Data::List->new( undef, 'd', [], [] ),      '', 'name has to be defined');
+is( ref App::Goto::Dir::Data::List->new( '', 'd', [], [] ),         '', 'name has to have a value');
+is( ref App::Goto::Dir::Data::List->new( 'n', undef, [], [] ),      '', 'description has to be defined');
+is( ref App::Goto::Dir::Data::List->new( 'n', '', [], [] ),         '', 'description has to have a value');
+is( ref App::Goto::Dir::Data::List->new( 'n', 'd', {}, [] ),        '', 'entries argument has wrong reference');
+is( ref App::Goto::Dir::Data::List->new( 'n', 'd', [], {} ),        '', 'filter argument has wrong reference');
+is( ref App::Goto::Dir::Data::List->new( 'n', 'd', [], [], [] ),    '', 'sorting order has to be a string');
+is( ref App::Goto::Dir::Data::List->new( 'n', 'd', [], [], '' ),    '', 'sorting order has to be defined');
 
 my $empty = App::Goto::Dir::Data::List->new('name', 'description', [], []);
 is( ref $empty,                             $class, 'created list with four arguments but no entries and no filter');

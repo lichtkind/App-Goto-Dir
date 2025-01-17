@@ -13,8 +13,10 @@ my $filter_class = 'App::Goto::Dir::Data::Filter';
 #### constructor, object life cycle ############################################
 sub new { #           ~name ~decription, @.entry, @.filter -- ~order --> .list
     my ($pkg, $name, $description, $entries, $filter, $sorting_order) = @_;
-    return 'need 4 arguments: name, description, list entries and list of filter, ordering name is optional'
-         if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY' or not $name or not $description;
+    return 'need 4 arguments: name, description, list entries and list of filter, ordering name string is optional'
+         if ref $entries ne 'ARRAY' or ref $filter ne 'ARRAY'
+         or not $name or ref $name or not $description or ref $description or
+         (defined $sorting_order and (ref $sorting_order or not $sorting_order));
 
     my $self = bless { name => $name, description => $description,
                        entry => [], filter => {}, sorting_order => 'position' };
