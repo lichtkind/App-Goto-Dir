@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 use v5.20;
 use warnings;
-use Test::More tests => 34;
+use Test::More tests => 37;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 
@@ -12,13 +12,16 @@ isnt( ref App::Goto::Dir::Data::Filter->new(),                          $class, 
 isnt( ref App::Goto::Dir::Data::Filter->new('$visits > 1'),             $class, 'needs more than just a code');
 isnt( ref App::Goto::Dir::Data::Filter->new('$visits > 1', 'name'),     $class, 'needs more than just a code and name');
 isnt( ref App::Goto::Dir::Data::Filter->new( undef, 'name', 'descr'),   $class, 'code has to be defined');
+isnt( ref App::Goto::Dir::Data::Filter->new( '', 'name', 'descr'),      $class, 'code has to have a value');
 isnt( ref App::Goto::Dir::Data::Filter->new( [], 'name', 'descr'),      $class, 'code has to be string');
 isnt( ref App::Goto::Dir::Data::Filter->new('1', undef, 'descr'),       $class, 'name has to be defined');
+isnt( ref App::Goto::Dir::Data::Filter->new('1', '', 'descr'),          $class, 'name has to have a value');
 isnt( ref App::Goto::Dir::Data::Filter->new('1', [], 'descr'),          $class, 'name has to be a string');
 isnt( ref App::Goto::Dir::Data::Filter->new('1', 'name', undef),        $class, 'description has to be defined');
+isnt( ref App::Goto::Dir::Data::Filter->new('1', 'name', ''),           $class, 'description has to have a value');
 isnt( ref App::Goto::Dir::Data::Filter->new('1', 'name', []),           $class, 'description has to be a string');
-isnt( ref App::Goto::Dir::Data::Filter->new('jam > 1', 'name', 'descr'), $class, 'code has to compile');
-isnt( ref App::Goto::Dir::Data::Filter->new('$jam > 1', 'name', 'descr'), $class, 'variable in code is no entry property');
+isnt( ref App::Goto::Dir::Data::Filter->new('jam > 1', 'name', 'desc'), $class, 'code has to compile');
+isnt( ref App::Goto::Dir::Data::Filter->new('$jam > 1', 'name', 'des'), $class, 'variable in code is no entry property');
 
 
 my $entry = App::Goto::Dir::Data::Entry->new( $ENV{'HOME'}, 2 );
