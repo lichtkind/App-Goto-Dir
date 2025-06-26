@@ -1,12 +1,4 @@
 
-# inline default configs
-
-package App::Goto::Dir::Config::Default;
-use v5.18;
-use warnings;
-
-sub get {
-    return {
         file => {              data => 'places.yaml',
                                backup => 'places.bak.yaml',
                                return => 'last_choice',
@@ -88,10 +80,3 @@ sub get {
                                           commands => 'c',
                                            install => 'i',
                                           settings => 's',
-                                        },
-                                },
-                  },
-    };
-}
-
-1;

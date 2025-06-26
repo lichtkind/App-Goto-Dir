@@ -1,8 +1,10 @@
-use v5.18;
-use warnings;
-use File::Spec;
+
+# store and formatting for a directory string
 
 package App::Goto::Dir::Data::ValueType::Directory;
+use v5.20;
+use warnings;
+use File::Spec;
 
 #### de- constructors ##################################################
 

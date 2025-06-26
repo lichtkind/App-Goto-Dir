@@ -1,10 +1,22 @@
-use v5.18;
+
+# exec user CLI commands
+
+package App::Goto::Dir::Command;
+use v5.20;
 use warnings;
 no warnings  qw/experimental::smartmatch/;
 use feature qw/switch/;
 use File::Spec;
+use App::Goto::Dir::Data;
+use App::Goto::Dir::Help;
 
-package App::Goto::Dir::Command;
+my %special_entry = ( last => 'entry last visited',
+                      prev => 'entry second last visited',
+                      add  => 'last entry created',
+                      del  => 'last entry deleted',
+                      name => 'last entry named',
+                      move => 'last entry copied, moved or removed',);
+
 
 my         ($config, $data, $cwd);
 sub init { ($config, $data, $cwd) = @_ }

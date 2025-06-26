@@ -1,41 +1,44 @@
-use v5.18;
-use warnings;
 
-use App::Goto::Dir::Data::List;
+# load, store, manage all dir entries in lists with filters
 
 package App::Goto::Dir::Data;
+use v5.20;
+use warnings;
+use App::Goto::Dir::Data::Entry;
+use App::Goto::Dir::Data::Filter;
+use App::Goto::Dir::Data::List;
 
-my %special_list = (   new => 'recently created directory entries',
-                       bin => 'deleted but not yet discarded entries',
-                       all => 'all entries, even the deleted',
-                      stay => 'all not deleted entries',
-                       now => 'recently visited entries, without deleted',
-                     named => 'entries with name, without deleted',
-                    broken => 'entries with not existing directories, not deleted',);
-my %special_entry = ( last => 'entry last visited',
-                      prev => 'entry second last visited',
-                      add  => 'last entry created',
-                      del  => 'last entry deleted',
-                      name => 'last entry named',
-                      move => 'last entry copied, moved or removed',);
+my $special_list = 'all';
 
-#### de- constructors ##################################################
-sub new {
-    my ($pkg) = @_;
-    my $self = { list => {}, current_list => 'all', special_entry => {}, config => {
-                     entry => { discard_deleted_in_days => 30,
-                                new_for_days => 40,
-                                recent_for_days => 40,
-                                overwrite_names => 0,
-                                name_length_max => 6, },
-                     list => { default_insert_position => -1,
-                                start_app_with => '*current',
-                         },
-                } };
-    $self->{'list'}{$_} = App::Goto::Dir::Data::List->new($_, $special_list{$_}, 1, []) for keys %special_list;
-    $self->{'special_entry'}{$_} = '' for keys %special_entry;
-    bless $self;
+#### de- constructor, serialisation ####################################
+sub new { #                                                  %config --> .
+    my ($pkg ) = @_;
+    bless { lists => {}, filter => {},              named_entries => {},
+              current_list_name => $special_list, last_used_entry => '', };
+
 }
+# sub state {}  #                          --> %data
+# sub restate {} #          %data, %config --> .
+# sub set_config {} #              %config --> ?
+
+# sub get_current_list_name {}  #                                         --> ~list_name
+# sub set_current_list_name {}  #  ~lname                                 --> ?~list_name
+
+# sub create_list {}            #  ~lname -- ~ldescription                --> .list
+# sub delete_list {}            #  ~lname                                 --> ?.list
+# sub get_list {}               #         -- ~lname                       --> .list
+# sub get_list_names {}         #                                         --> @~list_name
+# sub list_report {}            #         -- +width                       --> ~report
+
+# sub create_filter {}          #  ~fname, ~fdescription, ~fcode, %lmodes --> .filter
+# sub delete_filter {}          #  ~fname                                 --> ?
+# sub get_filter {}             #  ~fname                                 --> .filter
+# sub get_filter_names {}       #                                         --> @~fname
+
+# sub create_entry {}           #  ~dir -- ~ename, ~edescription          --> .entry
+# sub delete_entry {}           #  ~ename                                 --> ?
+# sub get_entry {}              #  ~ename                                 --> .entry
+# sub all_entry_names {}        #                                         --> @~ename
 
 sub restate {
     my ($pkg, $state, $config) = @_;
@@ -250,3 +253,24 @@ sub _get_entry {
 ########################################################################
 
 1;
+
+__END__
+
+filter   new => 'recently created directory entries',
+         bin => 'deleted but not yet discarded entries',
+         now => 'recently visited entries, without deleted',
+         named => 'entries with name, without deleted',
+         broken => 'entries with not existing directories, not deleted',);
+
+my $self = { lists => [], current_list_name => 'all', filter => [],
+             named_entry => {}, special_entry => {},
+             config => {
+                 entry => { discard_deleted_in_days => 30,
+                            new_for_days => 40,
+                            recent_for_days => 40,
+                            overwrite_names => 0,
+                            name_length_max => 6, },
+                 list => { default_insert_position => -1,
+                            start_app_with => '*current',
+                     },
+            } };

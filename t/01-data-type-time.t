@@ -1,53 +1,53 @@
 #!/usr/bin/perl -w
-use v5.18;
+use v5.20;
 use warnings;
-use Test::More tests => 25;
+use Test::More tests => 35;
 
 BEGIN { unshift @INC, 'lib', '../lib', '.', 't'}
 my $class = 'App::Goto::Dir::Data::ValueType::TimeStamp';
 
 use_ok( $class );
 
-my $obj = App::Goto::Dir::Data::ValueType::TimeStamp->new();
-is( ref $obj, $class, 'created first object');
-is( $obj->get,     0, 'default value is zero');
+my $stamp = App::Goto::Dir::Data::ValueType::TimeStamp->new();
+is( ref $stamp,     $class, 'created first object with no constructor argument');
+is( $stamp->get,         0, 'default value is zero');
+is( $stamp->is_empty,    1, 'stamp is empty');
+is( $stamp->age,         0, 'has no age');
+is( $stamp->age_in_days, 0, 'has no age, counted in days');
+is( $stamp->is_older_then_stamp(22), 0,  'can not tell if older than certain time point when stamp is empty');
+is( $stamp->is_older_then_period(22), 0, 'can not tell if older than certain time period if stamp is empty');
+is( $stamp->format(),              '01.01.1970',           'right default format (date only, human readable)');
+is( $stamp->format('time'),        '01.01.1970  01:00:00', 'right format with date and time');
+is( $stamp->format(0,1),           '1970.01.01',           'sortable date format');
+is( $stamp->format('time','sort'), '1970.01.01  01:00:00', 'right format with date and time');
 
-$obj->set(1);
-my $t = time;
-is( abs(time - $t) < 5,  1, 'updated just now');
-$obj->set(0);
-is( $obj->get,           0, 'could reset value');
-is( $obj->is_empty,      1, 'empty predicate works');
+is( $stamp->set(1),        1, 'changed value via setter');
+is( $stamp->get,           1, 'got new value correctly');
+is( $stamp->is_empty,      0, 'stamp is no longer empty');
+is( $stamp->age > 1_000_000_000, 1, 'has age');
+is( $stamp->age_in_days > 20_000, 1, 'has age, counted in days');
+is( $stamp->is_older_then_stamp(22), 1,  'stamp is older than old time point');
+is( $stamp->is_older_then_stamp(0),  0,  'stamp is newer than beginning of computer counting');
+is( $stamp->is_older_then_stamp(App::Goto::Dir::Data::ValueType::TimeStamp::_now()), 1, 'stamp is much old then now');
+is( $stamp->is_older_then_period(22), 1, 'stamp is older then some short seconds ago');
 
-$obj->set(1);
-$t = time;
-is( $obj->is_empty,                  0, 'got valid time stamp again');
-is( $obj->is_older_then_age(0),      0, 'time stamp is newer than beginning of period');
-is( $obj->is_older_then_period(10),  0, 'time stamp is newer than 10 seconds');
-is( $obj->age_in_days() < 1,         1, 'time stamp is newer one day');
+my $t = $stamp->update();
+is( abs(time - $t) < 5,    1, 'updated just now');
+is( $stamp->get,            $t, 'got new value correctly');
+is( $stamp->is_empty,        0, 'stamp is after update not empty');
+is( ($stamp->age < 5),       1, 'stamp is very young after update');
+is( $stamp->age_in_days < 1, 1, 'stamp has age of zero days');
+is( $stamp->is_older_then_stamp(0),    0, 'time stamp is newer than beginning of period');
+is( $stamp->is_older_then_stamp(22),   0, 'time stamp is newer than an very old');
+is( $stamp->is_older_then_period(10),  0, 'time stamp is newer than 10 seconds');
+is( $stamp->clear,          $t, 'got old value the reset to zero');
+is( $stamp->get,             0, 'new value is zero after reset');
+is( $stamp->is_empty,        1, 'stamp is empty again');
 
-my $value = $obj->get;
-is( $value > 1,                      1, 'getter brings a positive value');
-$obj->set(0);
-is( $obj->is_older_then_age(10),     1, 'time stamp is older than after beginning of period');
-is( $obj->is_older_then_period(10),  1, 'time stamp is older than 10 seconds');
-is( $obj->age_in_days() > 18250,     1, 'time stamp is older than 50 years');
-is( $obj->format(0,0),    '01.01.1970', 'correct time string, date only, human readable order');
-is( $obj->format(),       '01.01.1970', 'format arg defaults are correct');
-is( $obj->format(0,1),    '1970.01.01', 'correct time string, date only, sortable order');
-is( $obj->format(1),      '01.01.1970  01:00:00', 'correct time string, with time, human readable order');
-is( $obj->format(1,1),    '1970.01.01  01:00:00', 'correct time string, with time, sortable order');
-
-$obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(1);
-is( $obj->is_empty,      0, 'created none empty time stamp');
-$obj = App::Goto::Dir::Data::ValueType::TimeStamp->new(0);
-is( $obj->is_empty,      1, 'created explicitly empty time stamp');
-$obj->update;
-is( $obj->is_empty,      0, 'time stamp was created via update');
-my $state = $obj->state;
-is( $obj->get,      $state, 'could retrieve inner state');
+is( $stamp->set($t),        $t, 'reset to recent value');
+my $state = $stamp->state;
 my $nobj = App::Goto::Dir::Data::ValueType::TimeStamp->restate($state);
-is( ref $nobj, $class, 'recreated object via restate');
-is( $obj->get,   $obj->get, 'restated object has correct value');
+is( ref $nobj,          $class, 'recreated object via restate');
+is( $nobj->get,             $t, 'restated object has correct value');
 
 exit 0;
