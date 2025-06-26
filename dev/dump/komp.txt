@@ -1,0 +1,6 @@
+KomplexitŠt
+
+N der sub
+zeilen in sub
+N der Dateien
+tief der mod hierarchy
